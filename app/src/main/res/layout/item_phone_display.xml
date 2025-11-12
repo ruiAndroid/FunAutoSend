@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="16dp"
+    android:layout_marginBottom="16dp"
+    android:elevation="2dp">
+
+    <TextView
+        style="@style/SectionTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="已保存的本机手机号：" />
+
+    <TextView
+        android:id="@+id/tv_phone1"
+        style="@style/ContentText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="卡1：未设置" />
+
+    <TextView
+        android:id="@+id/tv_phone2"
+        style="@style/ContentText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="卡2：未设置" 
+        android:layout_marginBottom="0dp" />
+</LinearLayout>

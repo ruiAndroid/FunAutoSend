@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <!-- 顶部的小按钮和倒计时显示 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:padding="20dp"
+        android:background="@android:color/white">
+        
+<!--        <TextView-->
+<!--            android:id="@+id/tv_countdown"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="60:00后自动刷新"-->
+<!--            android:textSize="14sp"-->
+<!--            android:textColor="@android:color/holo_blue_light"-->
+<!--            android:layout_gravity="center_vertical"-->
+<!--            android:layout_marginRight="16dp"/>-->
+        
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_refresh_api"
+            style="@style/SecondaryButton"
+            android:text="刷新数据"
+            android:layout_marginRight="8dp"/>
+        
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_set_phone_number"
+            style="@style/SecondaryButton"
+            android:text="设置手机号" 
+            android:layout_marginRight="8dp" />        
+        
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_delete_all_sms"
+            style="@style/SecondaryButton"
+            android:text="删除短信配置"
+            android:layout_marginRight="0dp" />
+    </LinearLayout>
+    
+    <!-- 主内容区域 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_main_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="20dp"
+        android:background="@android:color/white" />
+        
+    <!-- 无数据提示 -->
+    <TextView
+        android:id="@+id/tv_no_data"
+        style="@style/ContentText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="暂无数据"
+        android:gravity="center"
+        android:visibility="gone" />
+</LinearLayout>

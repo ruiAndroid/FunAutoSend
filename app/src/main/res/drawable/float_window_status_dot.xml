@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 圆点形状 -->
+    <solid android:color="#FFFFFF" />
+    <!-- 圆角（设为宽度的一半，使其成为圆形） -->
+    <corners android:radius="4dp" />
+</shape>

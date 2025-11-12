@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 背景颜色，使用微信聊天界面风格的灰色 -->
+    <solid android:color="#F2F2F2" />
+    <!-- 圆角，比原来更圆润 -->
+    <corners android:radius="18dp" />
+    <!-- 边框 -->
+    <stroke
+        android:width="1dp"
+        android:color="#E0E0E0" />
+    <!-- 内边距 -->
+    <padding
+        android:left="4dp"
+        android:top="4dp"
+        android:right="4dp"
+        android:bottom="4dp" />
+</shape>

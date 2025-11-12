@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    应用使用统计访问配置
+    这个配置文件用于向系统请求使用统计访问权限，这有助于提高应用的保活能力
+-->
+<usage-stats xmlns:android="http://schemas.android.com/apk/res/android"/>
