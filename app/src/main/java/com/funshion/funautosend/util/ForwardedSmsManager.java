@@ -2,7 +2,7 @@ package com.funshion.funautosend.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import com.funshion.funautosend.model.SmsMessage;
 
@@ -58,7 +58,7 @@ public class ForwardedSmsManager {
      */
     public void addForwardedSmsId(String smsId) {
         if (smsId == null || smsId.isEmpty()) {
-            Log.w(TAG, "无效的短信ID，跳过添加");
+            LogUtil.w(TAG, "无效的短信ID，跳过添加");
             return;
         }
         
@@ -72,9 +72,9 @@ public class ForwardedSmsManager {
             // 保存更新后的集合
             getEditor().putStringSet(KEY_FORWARDED_IDS, forwardedIds).apply();
             
-            Log.d(TAG, "成功添加已转发短信ID: " + smsId + "，当前已转发总数: " + forwardedIds.size());
+            LogUtil.d(TAG, "成功添加已转发短信ID: " + smsId + "，当前已转发总数: " + forwardedIds.size());
         } catch (Exception e) {
-            Log.e(TAG, "添加已转发短信ID时出错: " + e.getMessage());
+            LogUtil.e(TAG, "添加已转发短信ID时出错: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -89,7 +89,7 @@ public class ForwardedSmsManager {
             // 创建新的HashSet以确保可修改性
             return new HashSet<>(ids);
         } catch (Exception e) {
-            Log.e(TAG, "获取已转发短信ID列表时出错: " + e.getMessage());
+            LogUtil.e(TAG, "获取已转发短信ID列表时出错: " + e.getMessage());
             e.printStackTrace();
             return new HashSet<>();
         }
@@ -113,9 +113,9 @@ public class ForwardedSmsManager {
     public void clearAllForwardedIds() {
         try {
             getEditor().putStringSet(KEY_FORWARDED_IDS, new HashSet<>()).apply();
-            Log.d(TAG, "已清空所有已转发短信ID记录");
+            LogUtil.d(TAG, "已清空所有已转发短信ID记录");
         } catch (Exception e) {
-            Log.e(TAG, "清空已转发短信ID记录时出错: " + e.getMessage());
+            LogUtil.e(TAG, "清空已转发短信ID记录时出错: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -152,7 +152,7 @@ public class ForwardedSmsManager {
             // 保存更新后的列表
             SmsStorageHelper.getInstance(context).saveSmsList(smsList);
             
-            Log.d(TAG, "已保存短信到本地存储，短信ID: " + smsId + ", SIM卡ID: " + (simId != null ? simId : "未知"));
+            LogUtil.d(TAG, "已保存短信到本地存储，短信ID: " + smsId + ", SIM卡ID: " + (simId != null ? simId : "未知"));
             
             // 打印所有已保存的短信ID
             List<SmsMessage> allSmsList = SmsStorageHelper.getInstance(context).getSmsList();
@@ -160,9 +160,9 @@ public class ForwardedSmsManager {
             for (SmsMessage message : allSmsList) {
                 idsString.append(message.getId()).append(" ");
             }
-            Log.d(TAG, idsString.toString());
+            LogUtil.d(TAG, idsString.toString());
         } catch (Exception e) {
-            Log.e(TAG, "保存收到的短信时出错: " + e.getMessage());
+            LogUtil.e(TAG, "保存收到的短信时出错: " + e.getMessage());
             e.printStackTrace();
         }
     }

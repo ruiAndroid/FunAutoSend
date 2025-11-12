@@ -16,7 +16,7 @@ import android.telephony.SmsManager;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import android.widget.Toast;
 import java.lang.reflect.Method;
 
@@ -122,7 +122,7 @@ public class SmsHelper {
         
         // 检查权限
         if (!hasReadSmsPermission(context)) {
-            Log.e(TAG, "没有读取短信权限");
+            LogUtil.e(TAG, "没有读取短信权限");
             return smsList;
         }
         
@@ -139,7 +139,7 @@ public class SmsHelper {
             
             if (cursor != null) {
                 int totalCount = cursor.getCount();
-                Log.d(TAG, "总共找到 " + totalCount + " 条短信");
+                LogUtil.d(TAG, "总共找到 " + totalCount + " 条短信");
                 
                 while (cursor.moveToNext()) {
                     String senderNumber = cursor.getString(cursor.getColumnIndex("address")); // 由于只查询收到的短信，address就是发件人
@@ -171,7 +171,7 @@ public class SmsHelper {
                             }
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "获取短信SIM卡信息时出错", e);
+                        LogUtil.e(TAG, "获取短信SIM卡信息时出错", e);
                     }
                     
                     // 创建短信实体对象，包含SIM卡ID信息
@@ -189,13 +189,13 @@ public class SmsHelper {
                     smsList.add(smsItem);
                     
                     // 打印短信信息到日志
-                    Log.d(TAG, "短信ID: " + smsItem.getId() + ", 类型: " + smsItem.getType() + ", 发件人: " + smsItem.getSender() + ", 收件人: " + smsItem.getRecipient() + ", 时间: " + smsItem.getDate() + ", SIM卡ID: " + (smsItem.getSimId() != null ? smsItem.getSimId() : "未找到"));
-                    Log.d(TAG, "内容: " + smsItem.getBody());
+                    LogUtil.d(TAG, "短信ID: " + smsItem.getId() + ", 类型: " + smsItem.getType() + ", 发件人: " + smsItem.getSender() + ", 收件人: " + smsItem.getRecipient() + ", 时间: " + smsItem.getDate() + ", SIM卡ID: " + (smsItem.getSimId() != null ? smsItem.getSimId() : "未找到"));
+                    LogUtil.d(TAG, "内容: " + smsItem.getBody());
                 }
                 cursor.close();
             }
         } catch (Exception e) {
-            Log.e(TAG, "获取短信内容失败: " + e.getMessage());
+            LogUtil.e(TAG, "获取短信内容失败: " + e.getMessage());
             e.printStackTrace();
         }
         
@@ -227,7 +227,7 @@ public class SmsHelper {
      */
     private static void checkAndResendMissedSms(Context context, List<SmsMessage> smsList) {
         if (context == null || smsList == null || smsList.isEmpty()) {
-            Log.d(TAG, "没有可检查的短信列表或上下文为空");
+            LogUtil.d(TAG, "没有可检查的短信列表或上下文为空");
             return;
         }
         
@@ -235,28 +235,28 @@ public class SmsHelper {
             // 获取已转发短信ID列表和管理器
             ForwardedSmsManager forwardedManager = ForwardedSmsManager.getInstance(context);
             Set<String> forwardedSmsIds = forwardedManager.getForwardedSmsIds();
-            Log.d(TAG, "当前已转发短信ID数量: " + forwardedSmsIds.size());
+            LogUtil.d(TAG, "当前已转发短信ID数量: " + forwardedSmsIds.size());
             
             // 获取转发规则列表
             List<Map<String, Object>> targetList = PreferencesHelper.getTargetList(context);
             if (targetList == null || targetList.isEmpty()) {
-                Log.d(TAG, "没有可用的转发规则，跳过补发白短信");
+                LogUtil.d(TAG, "没有可用的转发规则，跳过补发白短信");
                 return;
             }
             
-            Log.d(TAG, "开始检查漏发的短信，总短信数: " + smsList.size());
+            LogUtil.d(TAG, "开始检查漏发的短信，总短信数: " + smsList.size());
             int resendCount = 0;
             
             // 遍历扫描到的短信，找出未转发的短信
             for (SmsMessage smsMessage : smsList) {
                 String smsId = smsMessage.getId();
                 // 检查短信是否已转发
-                if (!forwardedSmsIds.contains(smsId)) {
-                    Log.d(TAG, "发现未转发的短信，ID: " + smsId + "，发件人: " + smsMessage.getSender());
+                    if (!forwardedSmsIds.contains(smsId)) {
+                        LogUtil.d(TAG, "发现未转发的短信，ID: " + smsId + "，发件人: " + smsMessage.getSender());
                     
                     // 尝试转发前，先将短信ID标记为已转发，确保每个短信只补发一次
                     forwardedManager.addForwardedSmsId(smsId);
-                    Log.d(TAG, "短信ID: " + smsId + " 已标记为已转发，确保只补发一次");
+                    LogUtil.d(TAG, "短信ID: " + smsId + " 已标记为已转发，确保只补发一次");
                     
                     // 对每条未转发的短信，只应用第一个匹配的转发规则
                     // 避免因多个规则导致同一短信被多次转发
@@ -269,30 +269,30 @@ public class SmsHelper {
                                 String workPhone = fields.get("workPhone");
                                 // 获取SIM卡号码
                                 String simPhoneNumber = getSimPhoneNumber(context, smsMessage.getSimId());
-                                Log.d(TAG, "检查规则匹配: workPhone=" + workPhone + ", SIM卡ID=" + smsMessage.getSimId() + ", SIM卡号码=" + (simPhoneNumber != null ? simPhoneNumber : "未找到"));
+                                LogUtil.d(TAG, "检查规则匹配: workPhone=" + workPhone + ", SIM卡ID=" + smsMessage.getSimId() + ", SIM卡号码=" + (simPhoneNumber != null ? simPhoneNumber : "未找到"));
                                 
                                 // 只有当workPhone与SIM卡号码匹配时，才进行短信转发
                                 if (simPhoneNumber != null && workPhone.equals(simPhoneNumber)) {
                                     // 调用handleAutoSendSms方法进行短信转发，确保参数顺序正确
                                     // 参数顺序: 规则项, 发送者手机号, 短信内容, 上下文, 短信ID, SIM卡ID
                                     boolean resendResult = handleAutoSendSms(item, smsMessage.getSender(), smsMessage.getBody(), context, smsId, smsMessage.getSimId(), smsMessage.getDate());
-                                    Log.d(TAG, "补发短信ID: " + smsId + " 使用SIM卡ID: " + (smsMessage.getSimId() != null ? smsMessage.getSimId() : "未设置"));
+                                    LogUtil.d(TAG, "补发短信ID: " + smsId + " 使用SIM卡ID: " + (smsMessage.getSimId() != null ? smsMessage.getSimId() : "未设置"));
                                     if (resendResult) {
-                                        Log.d(TAG, "成功提交短信ID: " + smsId + " 的补发请求");
+                                        LogUtil.d(TAG, "成功提交短信ID: " + smsId + " 的补发请求");
                                         resendCount++;
                                         smsHandled = true;
                                         // 成功处理后跳出循环，避免应用多个规则
                                         break;
                                     } else {
-                                        Log.e(TAG, "提交短信ID: " + smsId + " 的补发请求失败，但已标记为已转发，不再重复补发");
+                                        LogUtil.e(TAG, "提交短信ID: " + smsId + " 的补发请求失败，但已标记为已转发，不再重复补发");
                                     }
                                 } else {
-                                    Log.d(TAG, "SIM卡号码与workPhone不匹配，跳过转发: workPhone=" + workPhone + ", SIM卡号码=" + (simPhoneNumber != null ? simPhoneNumber : "未找到"));
+                                    LogUtil.d(TAG, "SIM卡号码与workPhone不匹配，跳过转发: workPhone=" + workPhone + ", SIM卡号码=" + (simPhoneNumber != null ? simPhoneNumber : "未找到"));
                                 }
                             }
                         } catch (Exception e) {
-                            Log.e(TAG, "处理转发规则时出错: " + e.getMessage());
-                        }
+                                LogUtil.e(TAG, "处理转发规则时出错: " + e.getMessage());
+                            }
                         
                         // 如果已经处理成功，跳出循环
                         if (smsHandled) {
@@ -303,12 +303,12 @@ public class SmsHelper {
             }
             
             if (resendCount > 0) {
-                Log.d(TAG, "补发白短信任务完成，成功提交 " + resendCount + " 条补发请求，所有尝试补发的短信已标记为已转发");
+                LogUtil.d(TAG, "补发白短信任务完成，成功提交 " + resendCount + " 条补发请求，所有尝试补发的短信已标记为已转发");
             } else {
-                Log.d(TAG, "没有发现需要补发的短信");
+                LogUtil.d(TAG, "没有发现需要补发的短信");
             }
         } catch (Exception e) {
-            Log.e(TAG, "检查和补发白短信时出错: " + e.getMessage());
+            LogUtil.e(TAG, "检查和补发白短信时出错: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -353,11 +353,11 @@ public class SmsHelper {
     private static SmsManager getSmsManagerForSim(Context context, String simId) {
         try {
             if (simId == null || simId.isEmpty()) {
-                Log.d(TAG, "未指定SIM卡ID，使用默认SmsManager");
+                LogUtil.d(TAG, "未指定SIM卡ID，使用默认SmsManager");
                 return SmsManager.getDefault();
             }
             
-            Log.d(TAG, "获取SmsManager，SIM卡ID: " + simId);
+            LogUtil.d(TAG, "获取SmsManager，SIM卡ID: " + simId);
             
             // 尝试根据SIM卡ID获取对应的SmsManager
             // 不同Android版本和厂商可能有不同的实现方式
@@ -370,27 +370,27 @@ public class SmsHelper {
                         List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
                         if (subscriptionInfoList != null && !subscriptionInfoList.isEmpty()) {
                             // 针对当前设备的特殊映射处理
-                            if (simId.equals("1")) {
-                                // 对于simId为"1"的情况，我们需要找到实际对应SIM卡2的订阅ID
-                                // 通常这是第二个可用的SIM卡
-                                // if (subscriptionInfoList.size() >= 2) {
-                                //     SubscriptionInfo secondInfo = subscriptionInfoList.get(1);
-                                //     Log.d(TAG, "特殊映射：simId为1，使用第二个SIM卡，订阅ID: " + secondInfo.getSubscriptionId() + "，SIM卡槽: " + secondInfo.getSimSlotIndex());
-                                //     return SmsManager.getSmsManagerForSubscriptionId(secondInfo.getSubscriptionId());
-                                // }
-                                SubscriptionInfo firstInfo = subscriptionInfoList.get(0);
-                                Log.d(TAG, "特殊映射：simId为1，使用第一个SIM卡，订阅ID: " + firstInfo.getSubscriptionId() + "，SIM卡槽: " + firstInfo.getSimSlotIndex());
-                                return SmsManager.getSmsManagerForSubscriptionId(firstInfo.getSubscriptionId());
-                            } else if (simId.equals("2")) {
-                                // 对于simId为"2"的情况，我们需要找到实际对应SIM卡1的订阅ID
-                                // 通常这是第一个可用的SIM卡
-                                // SubscriptionInfo firstInfo = subscriptionInfoList.get(0);
-                                // Log.d(TAG, "特殊映射：simId为2，使用第一个SIM卡，订阅ID: " + firstInfo.getSubscriptionId() + "，SIM卡槽: " + firstInfo.getSimSlotIndex());
-                                // return SmsManager.getSmsManagerForSubscriptionId(firstInfo.getSubscriptionId());
+                                if (simId.equals("1")) {
+                                    // 对于simId为"1"的情况，我们需要找到实际对应SIM卡2的订阅ID
+                                    // 通常这是第二个可用的SIM卡
+                                    // if (subscriptionInfoList.size() >= 2) {
+                                    //     SubscriptionInfo secondInfo = subscriptionInfoList.get(1);
+                                    //     LogUtil.d(TAG, "特殊映射：simId为1，使用第二个SIM卡，订阅ID: " + secondInfo.getSubscriptionId() + "，SIM卡槽: " + secondInfo.getSimSlotIndex());
+                                    //     return SmsManager.getSmsManagerForSubscriptionId(secondInfo.getSubscriptionId());
+                                    // }
+                                    SubscriptionInfo firstInfo = subscriptionInfoList.get(0);
+                                    LogUtil.d(TAG, "特殊映射：simId为1，使用第一个SIM卡，订阅ID: " + firstInfo.getSubscriptionId() + "，SIM卡槽: " + firstInfo.getSimSlotIndex());
+                                    return SmsManager.getSmsManagerForSubscriptionId(firstInfo.getSubscriptionId());
+                                } else if (simId.equals("2")) {
+                                    // 对于simId为"2"的情况，我们需要找到实际对应SIM卡1的订阅ID
+                                    // 通常这是第一个可用的SIM卡
+                                    // SubscriptionInfo firstInfo = subscriptionInfoList.get(0);
+                                    // LogUtil.d(TAG, "特殊映射：simId为2，使用第一个SIM卡，订阅ID: " + firstInfo.getSubscriptionId() + "，SIM卡槽: " + firstInfo.getSimSlotIndex());
+                                    // return SmsManager.getSmsManagerForSubscriptionId(firstInfo.getSubscriptionId());
 
-                                SubscriptionInfo secondInfo = subscriptionInfoList.get(1);
-                                Log.d(TAG, "特殊映射：simId为2，使用第二个SIM卡，订阅ID: " + secondInfo.getSubscriptionId() + "，SIM卡槽: " + secondInfo.getSimSlotIndex());
-                                return SmsManager.getSmsManagerForSubscriptionId(secondInfo.getSubscriptionId());
+                                    SubscriptionInfo secondInfo = subscriptionInfoList.get(1);
+                                    LogUtil.d(TAG, "特殊映射：simId为2，使用第二个SIM卡，订阅ID: " + secondInfo.getSubscriptionId() + "，SIM卡槽: " + secondInfo.getSimSlotIndex());
+                                    return SmsManager.getSmsManagerForSubscriptionId(secondInfo.getSubscriptionId());
                             }
                             
                             // 常规匹配逻辑
@@ -398,7 +398,7 @@ public class SmsHelper {
                             //     // 尝试匹配SIM卡ID或订阅ID
                             //     if (String.valueOf(info.getSubscriptionId()).equals(simId) || 
                             //         (info.getSimSlotIndex() >= 0 && String.valueOf(info.getSimSlotIndex() + 1).equals(simId))) {
-                            //         Log.d(TAG, "找到匹配的SIM卡，使用订阅ID: " + info.getSubscriptionId() + "，SIM卡槽: " + info.getSimSlotIndex());
+                            //         LogUtil.d(TAG, "找到匹配的SIM卡，使用订阅ID: " + info.getSubscriptionId() + "，SIM卡槽: " + info.getSimSlotIndex());
                             //         return SmsManager.getSmsManagerForSubscriptionId(info.getSubscriptionId());
                             //     }
                             // }
@@ -408,27 +408,27 @@ public class SmsHelper {
                             //     // 只包含1不包含2，判断为SIM卡2，使用第二个可用的SIM卡
                             //     if (subscriptionInfoList.size() >= 2) {
                             //         SubscriptionInfo secondInfo = subscriptionInfoList.get(1);
-                            //         Log.d(TAG, "特殊映射：simId包含1不包含2，使用第二个SIM卡，订阅ID: " + secondInfo.getSubscriptionId());
+                            //         LogUtil.d(TAG, "特殊映射：simId包含1不包含2，使用第二个SIM卡，订阅ID: " + secondInfo.getSubscriptionId());
                             //         return SmsManager.getSmsManagerForSubscriptionId(secondInfo.getSubscriptionId());
                             //     }
                             // } else if (simId.contains("2")) {
                             //     // 包含2，判断为SIM卡1，使用第一个可用的SIM卡
                             //     SubscriptionInfo firstInfo = subscriptionInfoList.get(0);
-                            //     Log.d(TAG, "特殊映射：simId包含2，使用第一个SIM卡，订阅ID: " + firstInfo.getSubscriptionId());
+                            //     LogUtil.d(TAG, "特殊映射：simId包含2，使用第一个SIM卡，订阅ID: " + firstInfo.getSubscriptionId());
                             //     return SmsManager.getSmsManagerForSubscriptionId(firstInfo.getSubscriptionId());
                             // }
                         }
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "使用SubscriptionManager获取SmsManager失败: " + e.getMessage());
+                    LogUtil.e(TAG, "使用SubscriptionManager获取SmsManager失败: " + e.getMessage());
                 }
             }
             
             // 所有尝试都失败时，回退到默认SmsManager
-            Log.d(TAG, "无法根据simId获取特定的SmsManager，使用默认SmsManager");
+            LogUtil.d(TAG, "无法根据simId获取特定的SmsManager，使用默认SmsManager");
             return SmsManager.getDefault();
         } catch (Exception e) {
-            Log.e(TAG, "获取SmsManager时出错: " + e.getMessage());
+            LogUtil.e(TAG, "获取SmsManager时出错: " + e.getMessage());
             return SmsManager.getDefault();
         }
     }
@@ -447,7 +447,7 @@ public class SmsHelper {
                 if (context != null) {
                     showToastInUiThread(context, "目标手机号不能为空", Toast.LENGTH_SHORT);
                 }
-                Log.e(TAG, "目标手机号为空，无法发送短信");
+                LogUtil.e(TAG, "目标手机号为空，无法发送短信");
                 return false;
             }
 
@@ -455,12 +455,12 @@ public class SmsHelper {
             String simPhoneNumber = getSimPhoneNumber(context, simId);
             
             // 详细日志记录，包括短信内容长度和特殊字符情况
-            Log.d(TAG, "准备发送短信到: " + phoneNumber);
-            Log.d(TAG, "短信内容长度: " + message.length() + " 字符");
-            Log.d(TAG, "短信内容包含特殊字符检查: " + containsSpecialCharacters(message));
-            Log.d(TAG, "短信内容前50字符: " + (message.length() > 50 ? message.substring(0, 50) : message));
-            Log.d(TAG, "使用SIM卡ID: " + (simId != null ? simId : "默认"));
-            Log.d(TAG, "使用SIM卡号码: " + (simPhoneNumber != null && !simPhoneNumber.isEmpty() ? simPhoneNumber : "未找到"));
+            LogUtil.d(TAG, "准备发送短信到: " + phoneNumber);
+            LogUtil.d(TAG, "短信内容长度: " + message.length() + " 字符");
+            LogUtil.d(TAG, "短信内容包含特殊字符检查: " + containsSpecialCharacters(message));
+            LogUtil.d(TAG, "短信内容前50字符: " + (message.length() > 50 ? message.substring(0, 50) : message));
+            LogUtil.d(TAG, "使用SIM卡ID: " + (simId != null ? simId : "默认"));
+            LogUtil.d(TAG, "使用SIM卡号码: " + (simPhoneNumber != null && !simPhoneNumber.isEmpty() ? simPhoneNumber : "未找到"));
 
             // 根据simId选择合适的SIM卡发送短信
             SmsManager smsManager = getSmsManagerForSim(context, simId);
@@ -468,7 +468,7 @@ public class SmsHelper {
             // 处理特殊字符，将可能导致问题的特殊字符进行转义或替换
             String processedMessage = processSpecialCharacters(message);
             if (!processedMessage.equals(message)) {
-                Log.d(TAG, "特殊字符已处理，处理后内容前50字符: " + (processedMessage.length() > 50 ? processedMessage.substring(0, 50) : processedMessage));
+                LogUtil.d(TAG, "特殊字符已处理，处理后内容前50字符: " + (processedMessage.length() > 50 ? processedMessage.substring(0, 50) : processedMessage));
             }
 
             // 创建发送状态监听器，使用ComponentName明确指定目标广播接收器
@@ -483,11 +483,11 @@ public class SmsHelper {
                     Class<?> receiverClass = Class.forName("com.funshion.funautosend.receiver.SmsSendStatusReceiver");
                     Method method = receiverClass.getMethod("addSmsIdToIntent", Intent.class, String.class);
                     method.invoke(null, sentIntent, smsId);
-                    Log.d(TAG, "已将短信ID添加到Intent: " + smsId);
+                    LogUtil.d(TAG, "已将短信ID添加到Intent: " + smsId);
                 } catch (Exception e) {
                     // 备用方案：直接设置Extra
                     sentIntent.putExtra("SMS_ID", smsId);
-                    Log.d(TAG, "备用方案：已将短信ID添加到Intent: " + smsId);
+                    LogUtil.d(TAG, "备用方案：已将短信ID添加到Intent: " + smsId);
                 }
             }
             
@@ -509,7 +509,7 @@ public class SmsHelper {
             // 对于长短信进行拆分发送
             if (processedMessage.length() > 70) {
                 ArrayList<String> parts = smsManager.divideMessage(processedMessage);
-                Log.d(TAG, "短信过长，已拆分为: " + parts.size() + " 部分");
+                LogUtil.d(TAG, "短信过长，已拆分为: " + parts.size() + " 部分");
                 
                 // 为每个短信部分创建发送状态监听器，同样使用ComponentName
                 ArrayList<PendingIntent> sentIntents = new ArrayList<>();
@@ -526,11 +526,11 @@ public class SmsHelper {
                             Class<?> receiverClass = Class.forName("com.funshion.funautosend.receiver.SmsSendStatusReceiver");
                             Method method = receiverClass.getMethod("addSmsIdToIntent", Intent.class, String.class);
                             method.invoke(null, partIntent, smsId);
-                            Log.d(TAG, "已将短信ID添加到部分短信Intent: " + smsId + ", 部分索引: " + i);
+                            LogUtil.d(TAG, "已将短信ID添加到部分短信Intent: " + smsId + ", 部分索引: " + i);
                         } catch (Exception e) {
                             // 备用方案：直接设置Extra
                             partIntent.putExtra("SMS_ID", smsId);
-                            Log.d(TAG, "备用方案：已将短信ID添加到部分短信Intent: " + smsId + ", 部分索引: " + i);
+                            LogUtil.d(TAG, "备用方案：已将短信ID添加到部分短信Intent: " + smsId + ", 部分索引: " + i);
                         }
                     }
                     
@@ -553,7 +553,7 @@ public class SmsHelper {
                 smsManager.sendTextMessage(phoneNumber, null, processedMessage, pendingSentIntent, null);
             }
             
-            Log.d(TAG, "短信发送命令已提交到系统");
+            LogUtil.d(TAG, "短信发送命令已提交到系统");
             
             // 注意：这里只是表示发送命令已提交，实际发送结果需要通过广播监听器获取
             // 在当前实现中，我们暂时保持原有逻辑，将命令提交视为发送成功
@@ -564,10 +564,10 @@ public class SmsHelper {
             }
             return true;
         } catch (Exception e) {
-            Log.e(TAG, "短信发送失败: " + e.getMessage());
+            LogUtil.e(TAG, "短信发送失败: " + e.getMessage());
             e.printStackTrace();
             if (context != null) {
-                Log.e(TAG, "短信发送失败，请检查网络或稍后重试");
+                LogUtil.e(TAG, "短信发送失败，请检查网络或稍后重试");
                 // 错误提示不使用Toast，避免在后台线程中出现问题
             }
             return false;
@@ -582,11 +582,11 @@ public class SmsHelper {
      */
     private static String getSimPhoneNumber(Context context, String simId) {
         if (context == null || simId == null) {
-            Log.w(TAG, "上下文或SIM卡ID为空，无法获取SIM卡号码");
+            LogUtil.w(TAG, "上下文或SIM卡ID为空，无法获取SIM卡号码");
             return "";
         }
         
-        Log.d(TAG, "正在处理SIM卡ID: " + simId);
+        LogUtil.d(TAG, "正在处理SIM卡ID: " + simId);
         
         try {
             // 针对当前设备的特殊映射：subscription_id为1实际对应SIM卡2
@@ -628,7 +628,7 @@ public class SmsHelper {
             String phone1 = PreferencesHelper.getPhoneNumber1(context);
             return !phone1.isEmpty() ? phone1 : PreferencesHelper.getPhoneNumber2(context);
         } catch (Exception e) {
-            Log.e(TAG, "获取SIM卡号码时出错: " + e.getMessage());
+            LogUtil.e(TAG, "获取SIM卡号码时出错: " + e.getMessage());
             return "";
         }
     }
@@ -708,7 +708,7 @@ public class SmsHelper {
             // 获取item中的字段信息
             Map<String, String> fields = (Map<String, String>) item.get("fields");
             if (fields == null) {
-                Log.e(TAG, "item中fields为空");
+                LogUtil.e(TAG, "item中fields为空");
                 return false;
             }
 
@@ -718,7 +718,7 @@ public class SmsHelper {
 
             // 构建短信内容：id+","+remark+","+senderPhone+","+receivedContent
             String smsContent = id + "," + remark + "," + senderPhone + "," + receivedContent;
-            Log.d(TAG, "handleAutoSendSms: smsContent:" + smsContent);
+            LogUtil.d(TAG, "handleAutoSendSms: smsContent:" + smsContent);
 
             // 获取目标手机号
             String targetPhone = fields.get("operatePhone");
@@ -726,15 +726,15 @@ public class SmsHelper {
             if (targetPhone != null && !targetPhone.isEmpty()) {
                 // 注意：现在我们直接将短信ID作为参数传递给sendSmsToTarget方法
                 // 这样可以避免并发处理多条短信时的ID覆盖问题
-                Log.d(TAG, "准备发送短信，ID: " + smsId + (smsId != null && smsId.startsWith("temp_") ? " (临时ID)" : ""));
+                LogUtil.d(TAG, "准备发送短信，ID: " + smsId + (smsId != null && smsId.startsWith("temp_") ? " (临时ID)" : ""));
                 
                 // 发送短信并记录结果，传递simId和smsId参数
-                smsSentSuccessfully = sendSmsToTarget(targetPhone, smsContent, context, simId, smsId);
-                
-                // 短信转发完成后上报数据
-                reportSmsData(context, fields, senderPhone, receivedContent, smsSentSuccessfully, smsId, time);
+                  smsSentSuccessfully = sendSmsToTarget(targetPhone, smsContent, context, simId, smsId);
+                  
+                  // 短信转发完成后上报数据
+                  reportSmsData(context, fields, senderPhone, receivedContent, smsSentSuccessfully, smsId, time);
             } else {
-                Log.w(TAG, "找不到目标手机号，无法发送短信");
+                LogUtil.w(TAG, "找不到目标手机号，无法发送短信");
                 
                 // 无法转发时也上报失败状态
                 reportSmsData(context, fields, senderPhone, receivedContent, false, smsId, time);
@@ -752,11 +752,11 @@ public class SmsHelper {
             String emailContent = receivedContent;
             
             // 发送邮件（使用带回调的方法，用于实现上报逻辑）
-            Log.d(TAG, "准备发送邮件 toEmail: "+toEmail);
+            LogUtil.d(TAG, "准备发送邮件 toEmail: "+toEmail);
             EmailHelper.sendEmail(context, toEmail, emailSubject, emailContent, new EmailSendCallback() {
                 @Override
                 public void onSuccess() {
-                    Log.d(TAG, "邮件发送成功 执行上报");
+                    LogUtil.d(TAG, "邮件发送成功 执行上报");
 
                     // 邮件发送成功，执行上报
                     reportEmailData(context, fields, id, senderPhone, time, receivedContent, true);
@@ -765,13 +765,13 @@ public class SmsHelper {
                 @Override
                 public void onFailure(String error) {
                     // 邮件发送失败，执行上报
-                    Log.d(TAG, "邮件发送失败 执行上报");
+                    LogUtil.d(TAG, "邮件发送失败 执行上报");
                     reportEmailData(context, fields, id, senderPhone, time, receivedContent, false);
                 }
             });
             
         } catch (Exception e) {
-            Log.e(TAG, "发送短信或邮件时出错: " + e.getMessage());
+            LogUtil.e(TAG, "发送短信或邮件时出错: " + e.getMessage());
             e.printStackTrace();
             if (context != null) {
                 showToastInUiThread(context, "处理短信时出错: " + e.getMessage(), Toast.LENGTH_SHORT);
@@ -818,7 +818,7 @@ public class SmsHelper {
             try {
                 id = Integer.parseInt(idStr);
             } catch (NumberFormatException e) {
-                Log.w(TAG, "解析ID失败，使用默认值0: " + idStr);
+                LogUtil.w(TAG, "解析ID失败，使用默认值0: " + idStr);
             }
             
             // 创建上报请求对象
@@ -837,17 +837,17 @@ public class SmsHelper {
             ApiClient.reportSmsData(context, request, new ApiCallback() {
                 @Override
                 public void onSuccess(String result) {
-                    Log.d(TAG, "短信上报成功: " + result);
+                    LogUtil.d(TAG, "短信上报成功: " + result);
                 }
                 
                 @Override
                 public void onFailure(String error) {
-                    Log.e(TAG, "短信上报失败: " + error);
+                    LogUtil.e(TAG, "短信上报失败: " + error);
                     // 上报失败不影响主流程，仅记录日志
                 }
             });
         } catch (Exception e) {
-            Log.e(TAG, "准备短信上报数据时出错: " + e.getMessage());
+            LogUtil.e(TAG, "准备短信上报数据时出错: " + e.getMessage());
             // 异常情况下也不影响主流程
         }
     }
@@ -870,7 +870,7 @@ public class SmsHelper {
                 try {
                     id = Integer.parseInt(idStr);
                 } catch (NumberFormatException e) {
-                    Log.w(TAG, "解析ID失败，使用默认值0: " + idStr);
+                    LogUtil.w(TAG, "解析ID失败，使用默认值0: " + idStr);
                 }
             }
             
@@ -893,17 +893,17 @@ public class SmsHelper {
             ApiClient.reportEmailData(context, request, new ApiCallback() {
                 @Override
                 public void onSuccess(String result) {
-                    Log.d(TAG, "邮件上报成功: " + result);
+                    LogUtil.d(TAG, "邮件上报成功: " + result);
                 }
                 
                 @Override
                 public void onFailure(String error) {
-                    Log.e(TAG, "邮件上报失败: " + error);
+                    LogUtil.e(TAG, "邮件上报失败: " + error);
                     // 上报失败不影响主流程，仅记录日志
                 }
             });
         } catch (Exception e) {
-            Log.e(TAG, "准备邮件上报数据时出错: " + e.getMessage());
+            LogUtil.e(TAG, "准备邮件上报数据时出错: " + e.getMessage());
             // 异常情况下也不影响主流程
         }
     }

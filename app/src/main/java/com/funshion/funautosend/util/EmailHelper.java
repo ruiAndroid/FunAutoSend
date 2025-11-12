@@ -3,7 +3,7 @@ package com.funshion.funautosend.util;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
@@ -119,7 +119,7 @@ public class EmailHelper {
             Transport.send(message);
             return true;
         } catch (MessagingException e) {
-            Log.e("EmailTask", "邮件发送异常: " + e.getMessage());
+            LogUtil.e("EmailTask", "邮件发送异常: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -142,12 +142,12 @@ public class EmailHelper {
      * 处理发送结果并在UI线程执行回调
      */
     private static void handleSendResult(Context context, boolean result, EmailSendCallback callback) {
-        Log.d("EmailTask", "发送结果: " + result);
+        LogUtil.d("EmailTask", "发送结果: " + result);
         if (result) {
             if (callback != null) {
                 callback.onSuccess();
             } else if (context != null) {
-                Log.d("EmailTask", "邮件发送成功");
+                LogUtil.d("EmailTask", "邮件发送成功");
                 // Toast.makeText(context, "邮件发送成功", Toast.LENGTH_LONG).show();
             }
         } else {
@@ -155,7 +155,7 @@ public class EmailHelper {
             if (callback != null) {
                 callback.onFailure(errorMsg);
             } else if (context != null) {
-                Log.e("EmailTask", errorMsg);
+                LogUtil.e("EmailTask", errorMsg);
                 // Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show();
             }
         }

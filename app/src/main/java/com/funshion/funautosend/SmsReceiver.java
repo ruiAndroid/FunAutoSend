@@ -8,7 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import android.widget.Toast;
 
 import com.funshion.funautosend.service.SmsForwardService;
@@ -49,11 +49,11 @@ public class SmsReceiver extends BroadcastReceiver {
      */
     private String getPhoneNumberBySimId(Context context, String simId) {
         if (context == null || simId == null) {
-            Log.w(TAG, "上下文或SIM卡ID为空，无法获取本机号码");
+            LogUtil.w(TAG, "上下文或SIM卡ID为空，无法获取本机号码");
             return "";
         }
         
-        Log.d(TAG, "正在处理SIM卡ID: " + simId);
+        LogUtil.d(TAG, "正在处理SIM卡ID: " + simId);
         
         try {
 
@@ -96,7 +96,7 @@ public class SmsReceiver extends BroadcastReceiver {
             String phone1 = PreferencesHelper.getPhoneNumber1(context);
             return !phone1.isEmpty() ? phone1 : PreferencesHelper.getPhoneNumber2(context);
         } catch (Exception e) {
-            Log.e(TAG, "获取本机号码时出错: " + e.getMessage());
+            LogUtil.e(TAG, "获取本机号码时出错: " + e.getMessage());
             return "";
         }
     }
@@ -107,7 +107,7 @@ public class SmsReceiver extends BroadcastReceiver {
     
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "接收到短信广播");
+        LogUtil.d(TAG, "接收到短信广播");
         
         // 保存最后接收到的意图，用于后续获取SIM卡信息
         this.mLastReceivedIntent = intent;
@@ -135,9 +135,9 @@ public class SmsReceiver extends BroadcastReceiver {
                 context.startService(scanIntent);
             }
             
-            Log.d(TAG, "已发送触发短信扫描的广播");
+            LogUtil.d(TAG, "已发送触发短信扫描的广播");
         } catch (Exception e) {
-            Log.e(TAG, "触发短信扫描失败: " + e.getMessage());
+            LogUtil.e(TAG, "触发短信扫描失败: " + e.getMessage());
         }
     }
     
@@ -169,14 +169,14 @@ public class SmsReceiver extends BroadcastReceiver {
                     List<Map<String, Object>> localTargetList = PreferencesHelper.getTargetList(context);
                     
                     if (localTargetList != null && !localTargetList.isEmpty()) {
-                        Log.d(TAG, "使用本地存储的目标列表，数量: " + localTargetList.size());
+                        LogUtil.d(TAG, "使用本地存储的目标列表，数量: " + localTargetList.size());
                         
                         // 根据SIM卡ID过滤目标列表，只保留匹配当前SIM卡的规则
                         List<Map<String, Object>> filteredTargetList = new ArrayList<>();
                         
                         // 获取当前SIM卡对应的本机号码
                         String currentPhoneNumber = getPhoneNumberBySimId(context, simId);
-                        Log.d(TAG, "当前SIM卡ID: " + simId + ", 对应的本机号码: " + currentPhoneNumber);
+                        LogUtil.d(TAG, "当前SIM卡ID: " + simId + ", 对应的本机号码: " + currentPhoneNumber);
                         
                         // 过滤目标列表，只保留workPhone与当前SIM卡本机号码匹配的规则
                         for (Map<String, Object> item : localTargetList) {
@@ -186,12 +186,12 @@ public class SmsReceiver extends BroadcastReceiver {
                                 // 只有当workPhone与当前SIM卡的本机号码匹配时，才添加到过滤后的列表中
                                 if (!workPhone.isEmpty() && workPhone.equals(currentPhoneNumber)) {
                                     filteredTargetList.add(item);
-                                    Log.d(TAG, "找到匹配的转发规则，workPhone: " + workPhone);
+                                    LogUtil.d(TAG, "找到匹配的转发规则，workPhone: " + workPhone);
                                 }
                             }
                         }
                         
-                        Log.d(TAG, "过滤后的目标列表数量: " + filteredTargetList.size());
+                        LogUtil.d(TAG, "过滤后的目标列表数量: " + filteredTargetList.size());
                         
                         // 遍历过滤后的目标列表，执行短信转发和邮件发送
                         for (Map<String, Object> item : filteredTargetList) {
@@ -203,11 +203,11 @@ public class SmsReceiver extends BroadcastReceiver {
                             // 对于临时ID也进行保存，确保数据完整性
                             if (smsId != null) {
                                 ForwardedSmsManager.saveReceivedSms(context, smsId, sender, content, time, simId);
-                                Log.d(TAG, "短信已保存到本地存储，短信ID: " + smsId + ", SIM卡ID: " + (simId != null ? simId : "未知"));
+                                LogUtil.d(TAG, "短信已保存到本地存储，短信ID: " + smsId + ", SIM卡ID: " + (simId != null ? simId : "未知"));
                                 
                                 // 对于长短信，预先设置一个特殊标记，表示正在处理中
                                 if (content.length() > 70 && smsId.startsWith("temp_")) {
-                                    Log.d(TAG, "长短信使用临时ID处理，确保能够正确跟踪发送状态");
+                                    LogUtil.d(TAG, "长短信使用临时ID处理，确保能够正确跟踪发送状态");
                                     // 直接将临时ID添加到已转发列表中，避免重复处理
                                     // 注意：这是一个临时解决方案，实际状态仍由SmsSendStatusReceiver处理
                                     ForwardedSmsManager.getInstance(context).addForwardedSmsId(smsId);
@@ -217,25 +217,25 @@ public class SmsReceiver extends BroadcastReceiver {
                             // 短信转发命令已提交，立即将短信ID添加到已转发列表中
                             // 这是为了防止扫描机制触发时重复转发同一条短信
                             if (isForwarded && smsId != null) {
-                                Log.d(TAG, "短信转发命令已提交，短信ID: " + smsId);
+                                LogUtil.d(TAG, "短信转发命令已提交，短信ID: " + smsId);
                                 ForwardedSmsManager.getInstance(context).addForwardedSmsId(smsId);
-                                Log.d(TAG, "已将短信ID添加到已转发列表，避免重复转发，短信ID: " + smsId);
+                                LogUtil.d(TAG, "已将短信ID添加到已转发列表，避免重复转发，短信ID: " + smsId);
                             }
                         }
                     } else {
-                        Log.d(TAG, "本地没有存储目标列表，无法处理短信转发");
+                        LogUtil.d(TAG, "本地没有存储目标列表，无法处理短信转发");
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "处理短信时出错: " + e.getMessage());
+                    LogUtil.e(TAG, "处理短信时出错: " + e.getMessage());
                     e.printStackTrace();
                     
                     // 异常情况下也尝试保存短信信息，确保数据不丢失
                     if (smsId != null) {
                         try {
                             ForwardedSmsManager.saveReceivedSms(context, smsId, sender, content, time, simId);
-                            Log.d(TAG, "异常情况下已保存短信信息，短信ID: " + smsId);
+                            LogUtil.d(TAG, "异常情况下已保存短信信息，短信ID: " + smsId);
                         } catch (Exception ex) {
-                            Log.e(TAG, "异常情况下保存短信信息失败: " + ex.getMessage());
+                            LogUtil.e(TAG, "异常情况下保存短信信息失败: " + ex.getMessage());
                         }
                     }
                 } finally {
@@ -271,7 +271,7 @@ public class SmsReceiver extends BroadcastReceiver {
                 Object subIdObj = bundle.get("subscription_id");
                 if (subIdObj != null) {
                     simId = subIdObj.toString();
-                    Log.d(TAG, "从intent获取到subscription_id: " + simId);
+                            LogUtil.d(TAG, "从intent获取到subscription_id: " + simId);
                 }
                 
                 // 尝试获取slot_id
@@ -279,14 +279,14 @@ public class SmsReceiver extends BroadcastReceiver {
                     Object slotIdObj = bundle.get("slot_id");
                     if (slotIdObj != null) {
                         simId = slotIdObj.toString();
-                        // 有些设备slot_id从0开始，需要调整为从1开始
-                        try {
-                            int slotId = Integer.parseInt(simId);
-                            simId = String.valueOf(slotId + 1);
-                        } catch (Exception e) {
-                            // 忽略转换错误
-                        }
-                        Log.d(TAG, "从intent获取到slot_id并调整: " + simId);
+                            // 有些设备slot_id从0开始，需要调整为从1开始
+                            try {
+                                int slotId = Integer.parseInt(simId);
+                                simId = String.valueOf(slotId + 1);
+                            } catch (Exception e) {
+                                // 忽略转换错误
+                            }
+                            LogUtil.d(TAG, "从intent获取到slot_id并调整: " + simId);
                     }
                 }
                 
@@ -295,14 +295,14 @@ public class SmsReceiver extends BroadcastReceiver {
                     Object simIdObj = bundle.get("sim_id");
                     if (simIdObj != null) {
                         simId = simIdObj.toString();
-                        Log.d(TAG, "从intent获取到sim_id: " + simId);
+                            LogUtil.d(TAG, "从intent获取到sim_id: " + simId);
                     }
                 }
             }
             
             return simId;
         } catch (Exception e) {
-            Log.e(TAG, "从intent获取SIM卡信息时出错: " + e.getMessage(), e);
+            LogUtil.e(TAG, "从intent获取SIM卡信息时出错: " + e.getMessage(), e);
             return null;
         }
     }
@@ -348,11 +348,11 @@ public class SmsReceiver extends BroadcastReceiver {
     private String[] getSmsInfo(Context context, String sender, String content, long timestamp) {
         // 先尝试从全局变量保存的intent中获取SIM卡信息
         String simIdFromIntent = getSimIdFromIntent(mLastReceivedIntent);
-        Log.d(TAG, "从intent获取的SIM卡ID: " + (simIdFromIntent != null ? simIdFromIntent : "未找到"));
+        LogUtil.d(TAG, "从intent获取的SIM卡ID: " + (simIdFromIntent != null ? simIdFromIntent : "未找到"));
         
         // 使用自定义方法生成短信ID
         String smsId = generateSmsId(sender, content, timestamp);
-        Log.d(TAG, "生成的短信ID: " + smsId);
+        LogUtil.d(TAG, "生成的短信ID: " + smsId);
         
         // 仍然可以进行数据库查询来获取SIM卡信息，但不再依赖系统ID
         String simIdFromDb = null;
@@ -378,24 +378,24 @@ public class SmsReceiver extends BroadcastReceiver {
                             int fieldIndex = cursor.getColumnIndex(field);
                             if (fieldIndex != -1 && !cursor.isNull(fieldIndex)) {
                                 simIdFromDb = cursor.getString(fieldIndex);
-                                Log.d(TAG, "从数据库" + field + "字段获取到SIM卡ID: " + simIdFromDb);
+                                LogUtil.d(TAG, "从数据库" + field + "字段获取到SIM卡ID: " + simIdFromDb);
                                 break;
                             }
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "获取SIM卡信息时出错", e);
+                        LogUtil.e(TAG, "获取SIM卡信息时出错", e);
                     }
                 }
                 cursor.close();
             }
         } catch (Exception e) {
-            Log.e(TAG, "查询SIM卡信息时出错: " + e.getMessage(), e);
+            LogUtil.e(TAG, "查询SIM卡信息时出错: " + e.getMessage(), e);
         }
         
         // 优先使用intent中的SIM卡信息，如果没有则使用数据库中的
         String simId = simIdFromIntent != null ? simIdFromIntent : simIdFromDb;
         
-        Log.d(TAG, "返回的短信信息 - ID: " + smsId + ", SIM卡ID: " + (simId != null ? simId : "未找到"));
+        LogUtil.d(TAG, "返回的短信信息 - ID: " + smsId + ", SIM卡ID: " + (simId != null ? simId : "未找到"));
         return new String[]{smsId, simId};
     }
     
@@ -451,7 +451,7 @@ public class SmsReceiver extends BroadcastReceiver {
             finalScore -= 10;
         }
         
-        Log.d(TAG, "内容匹配分析 - 原始内容长度: " + originalContent.length() + ", 数据库内容长度: " + dbContent.length() + 
+        LogUtil.d(TAG, "内容匹配分析 - 原始内容长度: " + originalContent.length() + ", 数据库内容长度: " + dbContent.length() + 
               ", 匹配字符: " + matchCount + ", 不匹配字符: " + mismatchCount + ", 相似度: " + similarityPercentage + "%, 最终分数: " + finalScore);
         
         return finalScore;
@@ -481,9 +481,9 @@ public class SmsReceiver extends BroadcastReceiver {
                 context.startService(serviceIntent);
             }
             
-            Log.d(TAG, "SmsForwardService启动成功");
+            LogUtil.d(TAG, "SmsForwardService启动成功");
         } catch (Exception e) {
-            Log.e(TAG, "SmsForwardService启动失败: " + e.getMessage());
+            LogUtil.e(TAG, "SmsForwardService启动失败: " + e.getMessage());
         }
     }
 }

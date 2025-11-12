@@ -7,7 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.util.Log;
+// 移除未使用的Log导入
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

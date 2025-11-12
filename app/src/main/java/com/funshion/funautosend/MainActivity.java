@@ -9,11 +9,13 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +51,7 @@ public class MainActivity extends Activity {
     private Button btnDeleteAllSms;
     private TextView tvNoData;
     private RecyclerView rvMainContent;
+    private Switch switchSaveLog;
     // private TextView tvCountdown;
     private MainAdapter mainAdapter;
     private List<Map<String, Object>> apiResultList = new ArrayList<>();
@@ -109,7 +112,7 @@ public class MainActivity extends Activity {
      * 扫描所有短信内容
      */
     private void scanAllSms() {
-        Log.d("MainActivity", "[手动触发]开始扫描所有短信");
+        LogUtil.d("MainActivity", "[手动触发]开始扫描所有短信");
         
         // 检查是否有读取短信权限
         if (SmsHelper.hasReadSmsPermission(this)) {
@@ -129,9 +132,9 @@ public class MainActivity extends Activity {
                         //     }
                         // });
                         
-                        Log.d("MainActivity", "[手动触发]短信扫描完成");
+                        LogUtil.d("MainActivity", "[手动触发]短信扫描完成");
                     } catch (Exception e) {
-                        Log.e("MainActivity", "[手动触发]短信扫描过程中出现异常: " + e.getMessage());
+                        LogUtil.e("MainActivity", "[手动触发]短信扫描过程中出现异常: " + e.getMessage());
                         e.printStackTrace();
                         
                         // 在主线程中显示错误提示
@@ -146,7 +149,7 @@ public class MainActivity extends Activity {
             }).start();
         } else {
             // 请求读取短信权限
-            Log.d("MainActivity", "请求读取短信权限");
+            LogUtil.d("MainActivity", "请求读取短信权限");
             SmsHelper.requestReadSmsPermission(this);
         }
     }
@@ -159,7 +162,7 @@ public class MainActivity extends Activity {
         smsScanRunnable = new Runnable() {
             @Override
             public void run() {
-                Log.d("MainActivity", "执行定时短信扫描");
+                LogUtil.d("MainActivity", "执行定时短信扫描");
                 scanAllSms();
                 
                 // 安排下一次扫描
@@ -169,7 +172,7 @@ public class MainActivity extends Activity {
         
         // 启动定时扫描
         smsScanHandler.postDelayed(smsScanRunnable, SMS_SCAN_INTERVAL);
-        Log.d("MainActivity", "定时短信扫描功能已初始化，间隔: " + SMS_SCAN_INTERVAL / 1000 + "秒");
+        LogUtil.d("MainActivity", "定时短信扫描功能已初始化，间隔: " + SMS_SCAN_INTERVAL / 1000 + "秒");
     }
     
     /**
@@ -178,7 +181,7 @@ public class MainActivity extends Activity {
     private void stopSmsAutoScan() {
         if (smsScanHandler != null && smsScanRunnable != null) {
             smsScanHandler.removeCallbacks(smsScanRunnable);
-            Log.d("MainActivity", "定时短信扫描已停止");
+            LogUtil.d("MainActivity", "定时短信扫描已停止");
         }
     }
     
@@ -201,9 +204,9 @@ public class MainActivity extends Activity {
                 startService(serviceIntent);
             }
             
-            Log.d("MainActivity", "前台服务启动成功");
+            LogUtil.d("MainActivity", "前台服务启动成功");
         } catch (Exception e) {
-            Log.e("MainActivity", "前台服务启动失败: " + e.getMessage());
+            LogUtil.e("MainActivity", "前台服务启动失败: " + e.getMessage());
             Toast.makeText(this, "服务启动失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
@@ -217,7 +220,25 @@ public class MainActivity extends Activity {
         btnDeleteAllSms = findViewById(R.id.btn_delete_all_sms);
         tvNoData = findViewById(R.id.tv_no_data);
         rvMainContent = findViewById(R.id.rv_main_content);
+        switchSaveLog = findViewById(R.id.switch_save_log);
         // tvCountdown = findViewById(R.id.tv_countdown);
+        
+        // 初始化日志开关状态 - 从SharedPreferences读取保存的状态，默认关闭
+        boolean saveLogEnabled = PreferencesHelper.getBoolean(this, PreferencesHelper.KEY_SAVE_LOG_ENABLED, false);
+        switchSaveLog.setChecked(saveLogEnabled);
+        LogUtil.setSaveToFileEnabled(saveLogEnabled); // 同步设置日志存储状态
+        switchSaveLog.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // 设置日志存储状态
+                LogUtil.setSaveToFileEnabled(isChecked);
+                // 保存状态到SharedPreferences
+                PreferencesHelper.putBoolean(MainActivity.this, PreferencesHelper.KEY_SAVE_LOG_ENABLED, isChecked);
+                String status = isChecked ? "已开启" : "已关闭";
+                Toast.makeText(MainActivity.this, "日志存储功能" + status, Toast.LENGTH_SHORT).show();
+                LogUtil.d("MainActivity", "日志存储功能" + status);
+            }
+        });
         
         // 设置手机号按钮点击事件
         btnSetPhoneNumber.setOnClickListener(new View.OnClickListener() {
@@ -386,7 +407,7 @@ public class MainActivity extends Activity {
                     // 删除sms_storage_prefs配置
                     SmsStorageHelper.getInstance(MainActivity.this).clearSmsList();
                     
-                    Log.d("MainActivity", "已删除所有短信配置文件");
+                    LogUtil.d("MainActivity", "已删除所有短信配置文件");
                     Toast.makeText(MainActivity.this, "短信配置已删除", Toast.LENGTH_SHORT).show();
                 }
             })
@@ -411,7 +432,7 @@ public class MainActivity extends Activity {
                         @Override
                         public void run() {
                             // Toast.makeText(MainActivity.this, "请求成功", Toast.LENGTH_SHORT).show();
-                            Log.d("MainActivity", "接口返回数据: " + result);
+                            LogUtil.d("MainActivity", "接口返回数据: " + result);
                             
                             // 获取已保存的手机号
                             String savedPhone1 = PreferencesHelper.getPhoneNumber1(MainActivity.this);
@@ -564,7 +585,7 @@ public class MainActivity extends Activity {
      * 初始化方法（已移除短信接收器，短信接收由SmsForwardService统一处理）
      */
     private void initSmsReceiver() {
-        Log.d("MainActivity", "短信接收功能已由SmsForwardService统一处理");
+        LogUtil.d("MainActivity", "短信接收功能已由SmsForwardService统一处理");
     }
 
 

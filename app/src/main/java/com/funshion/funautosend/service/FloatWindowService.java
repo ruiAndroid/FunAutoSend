@@ -11,7 +11,7 @@ import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -55,7 +55,7 @@ public class FloatWindowService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "悬浮窗服务创建");
+        LogUtil.d(TAG, "悬浮窗服务创建");
         
         // 初始化悬浮窗
         initFloatWindow();
@@ -73,7 +73,7 @@ public class FloatWindowService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "悬浮窗服务启动");
+        LogUtil.d(TAG, "悬浮窗服务启动");
         
         // 确保悬浮窗已显示
         showFloatWindow();
@@ -88,7 +88,7 @@ public class FloatWindowService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "悬浮窗服务销毁");
+        LogUtil.d(TAG, "悬浮窗服务销毁");
         
         // 移除悬浮窗
         removeFloatWindow();
@@ -112,34 +112,34 @@ public class FloatWindowService extends Service {
             windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
             
             if (windowManager == null) {
-                Log.e(TAG, "获取WindowManager服务失败");
+                LogUtil.e(TAG, "获取WindowManager服务失败");
                 return;
             }
             
             // 加载微信风格的悬浮窗布局
             LayoutInflater inflater = LayoutInflater.from(this);
             if (inflater == null) {
-                Log.e(TAG, "LayoutInflater初始化失败");
+                LogUtil.e(TAG, "LayoutInflater初始化失败");
                 return;
             }
             
             floatView = inflater.inflate(R.layout.layout_float_window_chat_style, null);
             
             if (floatView == null) {
-                Log.e(TAG, "加载悬浮窗布局失败");
+                LogUtil.e(TAG, "加载悬浮窗布局失败");
                 return;
             }
             
             // 设置悬浮窗参数
             params = new WindowManager.LayoutParams();
         } catch (Exception e) {
-            Log.e(TAG, "初始化悬浮窗时发生异常: " + e.getMessage());
+            LogUtil.e(TAG, "初始化悬浮窗时发生异常: " + e.getMessage());
             floatView = null;
             params = null;
         }
         
         if (params == null) {
-            Log.e(TAG, "悬浮窗参数初始化失败，无法继续设置参数");
+            LogUtil.e(TAG, "悬浮窗参数初始化失败，无法继续设置参数");
             return;
         }
         
@@ -260,7 +260,7 @@ public class FloatWindowService extends Service {
         try {
             // 检查是否有悬浮窗权限
             if (!FloatWindowPermissionHelper.hasFloatWindowPermission(this)) {
-                Log.w(TAG, "没有悬浮窗权限，无法显示悬浮窗");
+                LogUtil.w(TAG, "没有悬浮窗权限，无法显示悬浮窗");
                 return;
             }
             
@@ -268,7 +268,7 @@ public class FloatWindowService extends Service {
             if (windowManager == null) {
                 windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
                 if (windowManager == null) {
-                    Log.e(TAG, "WindowManager初始化失败");
+                    LogUtil.e(TAG, "WindowManager初始化失败");
                     return;
                 }
             }
@@ -277,14 +277,14 @@ public class FloatWindowService extends Service {
             if (floatView == null) {
                 initFloatWindow();
                 if (floatView == null) {
-                    Log.e(TAG, "浮窗视图初始化失败");
+                    LogUtil.e(TAG, "浮窗视图初始化失败");
                     return;
                 }
             }
             
             // 确保params已初始化
             if (params == null) {
-                Log.e(TAG, "LayoutParams未初始化");
+                LogUtil.e(TAG, "LayoutParams未初始化");
                 return;
             }
             
@@ -300,20 +300,20 @@ public class FloatWindowService extends Service {
                 
                 // 再次检查floatView是否为null（防止移除过程中被设为null）
                 if (floatView == null) {
-                    Log.e(TAG, "浮窗视图在移除后变为null");
+                    LogUtil.e(TAG, "浮窗视图在移除后变为null");
                     initFloatWindow();
                     if (floatView == null) {
-                        Log.e(TAG, "浮窗视图重新初始化失败");
+                        LogUtil.e(TAG, "浮窗视图重新初始化失败");
                         return;
                     }
                 }
                 
                 // 添加新的悬浮窗
                 windowManager.addView(floatView, params);
-                Log.d(TAG, "悬浮窗显示成功");
+                LogUtil.d(TAG, "悬浮窗显示成功");
             } catch (SecurityException se) {
                 // 处理安全异常，这可能是由于锁屏后系统限制了后台应用显示悬浮窗
-                Log.e(TAG, "显示悬浮窗安全异常: " + se.getMessage() + ", 将尝试使用前台方式重新添加");
+                LogUtil.e(TAG, "显示悬浮窗安全异常: " + se.getMessage() + ", 将尝试使用前台方式重新添加");
                 
                 // 重新设置浮窗参数，确保使用合适的类型
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -326,16 +326,16 @@ public class FloatWindowService extends Service {
                 try {
                     if (floatView != null && windowManager != null) {
                         windowManager.addView(floatView, params);
-                        Log.d(TAG, "悬浮窗使用备用参数添加成功");
+                        LogUtil.d(TAG, "悬浮窗使用备用参数添加成功");
                     }
                 } catch (Exception e2) {
-                    Log.e(TAG, "尝试备用参数添加悬浮窗也失败: " + e2.getMessage());
+                    LogUtil.e(TAG, "尝试备用参数添加悬浮窗也失败: " + e2.getMessage());
                     // 安排延迟重试
                     scheduleShowFloatWindowRetry();
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "显示悬浮窗失败: " + e.getMessage());
+            LogUtil.e(TAG, "显示悬浮窗失败: " + e.getMessage());
             // 打印详细的堆栈信息，帮助调试
             e.printStackTrace();
             // 重置floatView，避免使用损坏的视图
@@ -349,11 +349,11 @@ public class FloatWindowService extends Service {
      * 安排延迟重试显示悬浮窗
      */
     private void scheduleShowFloatWindowRetry() {
-        Log.d(TAG, "安排延迟重试显示悬浮窗");
+        LogUtil.d(TAG, "安排延迟重试显示悬浮窗");
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "执行延迟重试显示悬浮窗");
+                LogUtil.d(TAG, "执行延迟重试显示悬浮窗");
                 showFloatWindow();
             }
         }, 1000); // 延迟1秒后重试
@@ -369,15 +369,15 @@ public class FloatWindowService extends Service {
                     windowManager.removeViewImmediate(floatView);
                 } catch (IllegalArgumentException iae) {
                     // 处理视图未附加到窗口管理器的异常
-                    Log.w(TAG, "视图未附加到窗口管理器: " + iae.getMessage());
+                    LogUtil.w(TAG, "视图未附加到窗口管理器: " + iae.getMessage());
                 } finally {
                     // 无论移除是否成功，都将floatView设为null，避免重复使用
                     floatView = null;
                 }
-                Log.d(TAG, "悬浮窗移除成功");
+                LogUtil.d(TAG, "悬浮窗移除成功");
             }
         } catch (Exception e) {
-            Log.e(TAG, "移除悬浮窗失败: " + e.getMessage());
+            LogUtil.e(TAG, "移除悬浮窗失败: " + e.getMessage());
             // 确保即使出现异常，floatView也会被重置
             floatView = null;
         }
@@ -399,7 +399,7 @@ public class FloatWindowService extends Service {
     public static void start(Context context) {
         // 检查是否有悬浮窗权限
         if (!FloatWindowPermissionHelper.hasFloatWindowPermission(context)) {
-            Log.w(TAG, "没有悬浮窗权限，无法启动悬浮窗服务");
+            LogUtil.w(TAG, "没有悬浮窗权限，无法启动悬浮窗服务");
             return;
         }
         
@@ -450,7 +450,7 @@ public class FloatWindowService extends Service {
                     this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             alarmManager.cancel(pendingIntent);
         } catch (Exception e) {
-            Log.e(TAG, "取消AlarmManager失败: " + e.getMessage());
+            LogUtil.e(TAG, "取消AlarmManager失败: " + e.getMessage());
         }
     }
     
@@ -458,7 +458,7 @@ public class FloatWindowService extends Service {
      * 尝试自我重启服务
      */
     private void restartService() {
-        Log.d(TAG, "尝试自我重启服务");
+        LogUtil.d(TAG, "尝试自我重启服务");
         // 立即重启
         start(this);
         // 同时安排延迟重启，以防立即重启失败
@@ -469,7 +469,7 @@ public class FloatWindowService extends Service {
      * 安排延迟重启服务
      */
     private void scheduleRestartService() {
-        Log.d(TAG, "安排延迟重启服务");
+        LogUtil.d(TAG, "安排延迟重启服务");
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         Intent intent = new Intent(FloatWindowRestartReceiver.ACTION_RESTART_FLOAT_WINDOW_SERVICE);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(

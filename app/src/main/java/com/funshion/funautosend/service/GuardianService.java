@@ -9,7 +9,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import com.funshion.funautosend.IKeepAliveAidlInterface;
 import com.funshion.funautosend.util.KeepAliveManager;
@@ -54,7 +54,7 @@ public class GuardianService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "守护进程服务创建");
+        LogUtil.d(TAG, "守护进程服务创建");
         
         // 启动前台服务，使用完全独立的通知ID避免与主服务冲突
         startForeground(NotificationUtils.HIGH_PRIORITY_NOTIFICATION_ID + 1, 
@@ -68,7 +68,7 @@ public class GuardianService extends Service {
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "守护进程服务启动");
+        LogUtil.d(TAG, "守护进程服务启动");
         
         return START_STICKY;
     }
@@ -81,7 +81,7 @@ public class GuardianService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "守护进程服务销毁");
+        LogUtil.d(TAG, "守护进程服务销毁");
         
         // 移除检查任务
         mCheckHandler.removeCallbacksAndMessages(null);
@@ -92,7 +92,7 @@ public class GuardianService extends Service {
                 unbindService(mMainServiceConnection);
                 mIsServiceBound = false;
             } catch (Exception e) {
-                Log.e(TAG, "解绑主服务失败", e);
+                LogUtil.e(TAG, "解绑主服务失败", e);
             }
         }
         
@@ -104,9 +104,9 @@ public class GuardianService extends Service {
             } else {
                 startService(restartIntent);
             }
-            Log.d(TAG, "尝试重启守护进程服务");
+            LogUtil.d(TAG, "尝试重启守护进程服务");
         } catch (Exception e) {
-            Log.e(TAG, "重启守护进程服务失败", e);
+            LogUtil.e(TAG, "重启守护进程服务失败", e);
         }
         
         // 不再在销毁时触发保活检查，避免循环重启
@@ -121,7 +121,7 @@ public class GuardianService extends Service {
             mMainServiceConnection = new ServiceConnection() {
                 @Override
                 public void onServiceConnected(ComponentName name, IBinder service) {
-                    Log.d(TAG, "成功连接到主进程服务");
+                    LogUtil.d(TAG, "成功连接到主进程服务");
                     mMainServiceAidl = IKeepAliveAidlInterface.Stub.asInterface(service);
                     mLastConnectTime = System.currentTimeMillis();
                     mIsServiceBound = true;
@@ -129,7 +129,7 @@ public class GuardianService extends Service {
                 
                 @Override
                 public void onServiceDisconnected(ComponentName name) {
-                    Log.d(TAG, "与主进程服务断开连接");
+                    LogUtil.d(TAG, "与主进程服务断开连接");
                     mMainServiceAidl = null;
                     mIsServiceBound = false;
                     // 尝试重连并重启主服务
@@ -138,7 +138,7 @@ public class GuardianService extends Service {
                 
                 @Override
                 public void onBindingDied(ComponentName name) {
-                    Log.d(TAG, "主进程服务绑定死亡");
+                    LogUtil.d(TAG, "主进程服务绑定死亡");
                     mMainServiceAidl = null;
                     mIsServiceBound = false;
                     // 尝试重连并重启主服务
@@ -162,21 +162,21 @@ public class GuardianService extends Service {
                 if (mMainServiceAidl != null) {
                     boolean isAlive = mMainServiceAidl.isProcessAlive();
                     if (isAlive) {
-                        Log.d(TAG, "主进程服务存活");
+                        LogUtil.d(TAG, "主进程服务存活");
                         mLastConnectTime = System.currentTimeMillis();
                     } else {
-                        Log.d(TAG, "主进程服务不存活，尝试重启");
+                        LogUtil.d(TAG, "主进程服务不存活，尝试重启");
                         reconnectAndRestartMainService();
                     }
                 } else {
                     // 如果超过10秒未连接成功，尝试重启主服务
                     if (System.currentTimeMillis() - mLastConnectTime > 10000) {
-                        Log.d(TAG, "长时间未连接到主进程服务，尝试重启");
+                        LogUtil.d(TAG, "长时间未连接到主进程服务，尝试重启");
                         reconnectAndRestartMainService();
                     }
                 }
             } catch (RemoteException e) {
-                Log.d(TAG, "与主进程服务通信异常，尝试重启");
+                LogUtil.d(TAG, "与主进程服务通信异常，尝试重启");
                 mMainServiceAidl = null;
                 reconnectAndRestartMainService();
             } finally {
@@ -197,7 +197,7 @@ public class GuardianService extends Service {
                     unbindService(mMainServiceConnection);
                     mIsServiceBound = false;
                 } catch (Exception e) {
-                    Log.e(TAG, "解绑主服务失败", e);
+                    LogUtil.e(TAG, "解绑主服务失败", e);
                     mIsServiceBound = false; // 无论如何都重置绑定状态
                 }
             }
@@ -209,21 +209,21 @@ public class GuardianService extends Service {
             } else {
                 startService(mainServiceIntent);
             }
-            Log.d(TAG, "尝试重启主进程服务");
+            LogUtil.d(TAG, "尝试重启主进程服务");
             
             // 延迟绑定，确保服务已启动
             mCheckHandler.postDelayed(() -> {
                 try {
                     Intent bindIntent = new Intent(this, SmsForwardService.class);
                     bindService(bindIntent, mMainServiceConnection, Context.BIND_AUTO_CREATE);
-                    Log.d(TAG, "尝试绑定主进程服务");
+                    LogUtil.d(TAG, "尝试绑定主进程服务");
                 } catch (Exception e) {
-                    Log.e(TAG, "绑定主进程服务失败", e);
+                    LogUtil.e(TAG, "绑定主进程服务失败", e);
                     mIsServiceBound = false;
                 }
             }, 1000);
         } catch (Exception e) {
-            Log.e(TAG, "重启主进程服务失败", e);
+            LogUtil.e(TAG, "重启主进程服务失败", e);
         }
     }
     
@@ -238,9 +238,9 @@ public class GuardianService extends Service {
             } else {
                 context.startService(intent);
             }
-            Log.d(TAG, "启动守护进程服务");
+            LogUtil.d(TAG, "启动守护进程服务");
         } catch (Exception e) {
-            Log.e(TAG, "启动守护进程服务失败", e);
+            LogUtil.e(TAG, "启动守护进程服务失败", e);
         }
     }
     
@@ -251,9 +251,9 @@ public class GuardianService extends Service {
         try {
             Intent intent = new Intent(context, GuardianService.class);
             context.stopService(intent);
-            Log.d(TAG, "停止守护进程服务");
+            LogUtil.d(TAG, "停止守护进程服务");
         } catch (Exception e) {
-            Log.e(TAG, "停止守护进程服务失败", e);
+            LogUtil.e(TAG, "停止守护进程服务失败", e);
         }
     }
 }

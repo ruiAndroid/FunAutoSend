@@ -3,7 +3,7 @@ package com.funshion.funautosend.service;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.Intent;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 /**
  * JobScheduler服务，用于定期检查并重启SmsForwardService
@@ -14,7 +14,7 @@ public class KeepAliveJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        Log.d(TAG, "JobService启动，检查并重启前台服务");
+        LogUtil.d(TAG, "JobService启动，检查并重启前台服务");
         
         // 检查并启动SmsForwardService
         checkAndStartSmsForwardService();
@@ -25,7 +25,7 @@ public class KeepAliveJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        Log.d(TAG, "JobService被停止");
+        LogUtil.d(TAG, "JobService被停止");
         // 当任务被停止时，返回true表示希望系统重新安排这个任务
         return true;
     }
@@ -47,9 +47,9 @@ public class KeepAliveJobService extends JobService {
                 startService(serviceIntent);
             }
             
-            Log.d(TAG, "SmsForwardService启动成功");
+            LogUtil.d(TAG, "SmsForwardService启动成功");
         } catch (Exception e) {
-            Log.e(TAG, "SmsForwardService启动失败: " + e.getMessage());
+            LogUtil.e(TAG, "SmsForwardService启动失败: " + e.getMessage());
         }
     }
 }

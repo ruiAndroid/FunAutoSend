@@ -21,6 +21,7 @@ public class PreferencesHelper {
     public static final String KEY_API_RESULT_LIST = "apiResultList";
     public static final String KEY_TARGET_LIST = "targetList";
     public static final String KEY_LAST_UPDATE_TIME = "lastUpdateTime";
+    public static final String KEY_SAVE_LOG_ENABLED = "saveLogEnabled";
 
     /**
      * 获取SharedPreferences实例

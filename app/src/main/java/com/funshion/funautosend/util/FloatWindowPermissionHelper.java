@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+import com.funshion.funautosend.util.LogUtil;
+
 import android.util.Log;
 import android.widget.Toast;
 import java.util.List;
@@ -63,17 +65,17 @@ public class FloatWindowPermissionHelper {
             try {
                 // 根据不同厂商跳转到对应权限设置页面
                 if (requestManufacturerSpecificPermission(activity)) {
-                    Log.d(TAG, "已跳转到厂商特定权限设置页面");
+                    LogUtil.d(TAG, "已跳转到厂商特定权限设置页面");
                 } else {
                     // 通用方法
                     Intent intent = new Intent();
                     intent.setAction(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
                     intent.setData(Uri.parse("package:" + activity.getPackageName()));
                     activity.startActivityForResult(intent, requestCode);
-                    Log.d(TAG, "请求悬浮窗权限");
+                    LogUtil.d(TAG, "请求悬浮窗权限");
                 }
             } catch (Exception e) {
-                Log.e(TAG, "请求悬浮窗权限失败: " + e.getMessage());
+                LogUtil.e(TAG, "请求悬浮窗权限失败: " + e.getMessage());
                 // 如果打开设置页面失败，跳转到应用详情页
                 openAppDetailSettings(activity);
                 showToast(activity, "无法直接跳转到权限设置页面，请手动设置");
@@ -88,7 +90,7 @@ public class FloatWindowPermissionHelper {
      */
     private static boolean requestManufacturerSpecificPermission(Activity activity) {
         String manufacturer = Build.MANUFACTURER.toLowerCase();
-        Log.d(TAG, "当前手机厂商: " + manufacturer);
+        LogUtil.d(TAG, "当前手机厂商: " + manufacturer);
         
         try {
             switch (manufacturer) {
@@ -137,7 +139,7 @@ public class FloatWindowPermissionHelper {
                     return false;
             }
         } catch (Exception e) {
-            Log.e(TAG, "厂商特定权限请求失败: " + e.getMessage());
+            LogUtil.e(TAG, "厂商特定权限请求失败: " + e.getMessage());
             return false;
         }
     }
@@ -153,9 +155,9 @@ public class FloatWindowPermissionHelper {
             intent.setData(Uri.parse("package:" + context.getPackageName()));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
-            Log.d(TAG, "打开应用详情设置页面");
+            LogUtil.d(TAG, "打开应用详情设置页面");
         } catch (Exception e) {
-            Log.e(TAG, "打开应用详情设置页面失败: " + e.getMessage());
+            LogUtil.e(TAG, "打开应用详情设置页面失败: " + e.getMessage());
             showToast(context, "无法打开应用详情页面");
         }
     }
@@ -195,10 +197,10 @@ public class FloatWindowPermissionHelper {
      */
     public static boolean checkAndRequestFloatWindowPermission(Activity activity, int requestCode) {
         if (hasFloatWindowPermission(activity)) {
-            Log.d(TAG, "已获得悬浮窗权限");
+            LogUtil.d(TAG, "已获得悬浮窗权限");
             return true;
         } else {
-            Log.d(TAG, "未获得悬浮窗权限，显示权限说明");
+            LogUtil.d(TAG, "未获得悬浮窗权限，显示权限说明");
             showPermissionExplanationDialog(activity, requestCode);
             return false;
         }
@@ -227,7 +229,7 @@ public class FloatWindowPermissionHelper {
                 rom = line.trim();
             }
         } catch (IOException e) {
-            Log.e(TAG, "获取ROM版本失败: " + e.getMessage());
+            LogUtil.e(TAG, "获取ROM版本失败: " + e.getMessage());
         }
         return rom;
     }
@@ -283,7 +285,7 @@ public class FloatWindowPermissionHelper {
             }
             return false;
         } catch (Exception e) {
-            Log.e(TAG, "检查应用前台状态失败: " + e.getMessage());
+            LogUtil.e(TAG, "检查应用前台状态失败: " + e.getMessage());
             return false;
         }
     }

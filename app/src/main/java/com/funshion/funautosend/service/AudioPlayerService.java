@@ -13,7 +13,7 @@ import android.media.AudioTrack;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import com.funshion.funautosend.util.KeepAliveManager;
 
 import androidx.annotation.Nullable;
@@ -42,7 +42,7 @@ public class AudioPlayerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate: AudioPlayerService 已创建");
+        LogUtil.d(TAG, "onCreate: AudioPlayerService 已创建");
         
         // 创建通知渠道（Android 8.0及以上）
         createNotificationChannel();
@@ -99,7 +99,7 @@ public class AudioPlayerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand: 启动AudioPlayerService");
+        LogUtil.d(TAG, "onStartCommand: 启动AudioPlayerService");
         startSilentPlayback();
         
         // 移除不必要的保活检查，避免循环触发
@@ -110,7 +110,7 @@ public class AudioPlayerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy: AudioPlayerService 已销毁");
+        LogUtil.d(TAG, "onDestroy: AudioPlayerService 已销毁");
         
         // 停止前台服务
         stopForeground(true);
@@ -128,7 +128,7 @@ public class AudioPlayerService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
-        Log.d(TAG, "onTaskRemoved: 任务被移除，尝试重启服务");
+        LogUtil.d(TAG, "onTaskRemoved: 任务被移除，尝试重启服务");
         restartServiceWithDelay();
     }
 
@@ -181,9 +181,9 @@ public class AudioPlayerService extends Service {
             // 设置音量为0（静音）
             audioTrack.setVolume(0.0f);
             
-            Log.d(TAG, "AudioTrack初始化成功");
+            LogUtil.d(TAG, "AudioTrack初始化成功");
         } catch (Exception e) {
-            Log.e(TAG, "AudioTrack初始化失败", e);
+            LogUtil.e(TAG, "AudioTrack初始化失败", e);
             audioTrack = null;
         }
     }
@@ -203,7 +203,7 @@ public class AudioPlayerService extends Service {
                     // 准备播放
                     audioTrack.play();
                     isPlaying = true;
-                    Log.d(TAG, "静音音频流播放已开始");
+                    LogUtil.d(TAG, "静音音频流播放已开始");
                     
                     // 生成并写入静音数据（16位PCM数据，值为0表示静音）
                     short[] silentBuffer = new short[1024]; // 静音缓冲区，所有值默认为0
@@ -212,7 +212,7 @@ public class AudioPlayerService extends Service {
                     while (isPlaying && !Thread.interrupted()) {
                         // 检查AudioTrack状态
                         if (audioTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
-                            Log.w(TAG, "AudioTrack状态异常: " + audioTrack.getPlayState());
+                            LogUtil.w(TAG, "AudioTrack状态异常: " + audioTrack.getPlayState());
                             audioTrack.play(); // 尝试恢复播放
                         }
                         
@@ -223,9 +223,9 @@ public class AudioPlayerService extends Service {
                         Thread.sleep(10);
                     }
                 } catch (InterruptedException e) {
-                    Log.d(TAG, "播放线程被中断");
+                    LogUtil.d(TAG, "播放线程被中断");
                 } catch (Exception e) {
-                    Log.e(TAG, "播放过程中发生错误", e);
+                    LogUtil.e(TAG, "播放过程中发生错误", e);
                     // 发生错误时重置播放状态
                     isPlaying = false;
                     // 尝试重新初始化和播放
@@ -236,7 +236,7 @@ public class AudioPlayerService extends Service {
             
             playbackThread.start();
         } catch (Exception e) {
-            Log.e(TAG, "启动静音播放失败", e);
+            LogUtil.e(TAG, "启动静音播放失败", e);
         }
     }
 
@@ -253,7 +253,7 @@ public class AudioPlayerService extends Service {
                 try {
                     playbackThread.join(1000); // 等待线程结束，最多1秒
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "等待播放线程结束时被中断", e);
+                    LogUtil.e(TAG, "等待播放线程结束时被中断", e);
                 }
                 playbackThread = null;
             }
@@ -264,14 +264,14 @@ public class AudioPlayerService extends Service {
                     audioTrack.stop();
                     audioTrack.release();
                 } catch (Exception e) {
-                    Log.e(TAG, "释放AudioTrack异常", e);
+                    LogUtil.e(TAG, "释放AudioTrack异常", e);
                 }
                 audioTrack = null;
             }
             
-            Log.d(TAG, "静音音频流播放已停止");
+            LogUtil.d(TAG, "静音音频流播放已停止");
         } catch (Exception e) {
-            Log.e(TAG, "停止静音播放失败", e);
+            LogUtil.e(TAG, "停止静音播放失败", e);
         }
     }
 
@@ -288,9 +288,9 @@ public class AudioPlayerService extends Service {
                 } else {
                     startService(restartIntent);
                 }
-                Log.d(TAG, "尝试重启AudioPlayerService");
+                LogUtil.d(TAG, "尝试重启AudioPlayerService");
             } catch (Exception e) {
-                Log.e(TAG, "重启服务失败", e);
+                LogUtil.e(TAG, "重启服务失败", e);
             }
         }, 1000); // 1秒后重启
     }

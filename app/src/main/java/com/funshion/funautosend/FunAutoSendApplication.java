@@ -8,6 +8,8 @@ import android.util.Log;
 import androidx.work.Configuration;
 import androidx.work.WorkManager;
 
+import com.funshion.funautosend.util.LogUtil;
+
 /**
  * 应用程序主类
  * 负责初始化WorkManager和其他全局组件
@@ -18,7 +20,10 @@ public class FunAutoSendApplication extends Application implements Configuration
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "应用启动，进程ID: " + Process.myPid() + ", 进程名: " + getCurrentProcessName());
+        // 初始化日志工具
+        LogUtil.init(this);
+        LogUtil.setLogEnabled(true);
+        LogUtil.d(TAG, "应用启动，进程ID: " + Process.myPid() + ", 进程名: " + getCurrentProcessName());
         
         // 不需要手动初始化WorkManager，因为我们实现了Configuration.Provider接口
         // 系统会自动使用我们提供的配置进行初始化

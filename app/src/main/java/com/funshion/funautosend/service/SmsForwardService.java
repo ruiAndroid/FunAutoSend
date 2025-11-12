@@ -19,7 +19,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.RemoteException;
 import android.provider.Settings;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import androidx.annotation.Nullable;
 
@@ -90,7 +90,7 @@ public class SmsForwardService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "前台服务创建");
+        LogUtil.d(TAG, "前台服务创建");
 
         // 初始化电源管理器和WakeLock
         initPowerManager();
@@ -143,18 +143,18 @@ public class SmsForwardService extends Service {
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "前台服务启动");
+        LogUtil.d(TAG, "前台服务启动");
         
         // 检查是否是触发短信扫描的意图
         if (intent != null && intent.hasExtra(ACTION_SCAN_SMS)) {
-            Log.d(TAG, "接收到触发短信扫描的请求");
+            LogUtil.d(TAG, "接收到触发短信扫描的请求");
             // 触发延迟短信扫描
             triggerDelayedSmsScan();
         }
         
         // 检查是否是来自AlarmManager的刷新请求
         if (intent != null && intent.getBooleanExtra("FROM_ALARM_MANAGER", false)) {
-            Log.d(TAG, "接收到来自AlarmManager的刷新请求，立即执行刷新");
+            LogUtil.d(TAG, "接收到来自AlarmManager的刷新请求，立即执行刷新");
             // 立即执行一次刷新操作
             handleBackgroundRefresh();
         }
@@ -195,9 +195,9 @@ public class SmsForwardService extends Service {
             if (connectivityManager != null) {
                 try {
                     connectivityManager.unregisterNetworkCallback(networkCallback);
-                    Log.d(TAG, "网络状态监听已注销");
+                    LogUtil.d(TAG, "网络状态监听已注销");
                 } catch (Exception e) {
-                    Log.e(TAG, "注销网络监听失败: " + e.getMessage());
+                    LogUtil.e(TAG, "注销网络监听失败: " + e.getMessage());
                 }
             }
         }
@@ -206,16 +206,16 @@ public class SmsForwardService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "前台服务销毁");
+        LogUtil.d(TAG, "前台服务销毁");
         
         // 注销屏幕状态广播接收器
         if (screenStateReceiver != null) {
             try {
                 unregisterReceiver(screenStateReceiver);
                 screenStateReceiver = null;
-                Log.d(TAG, "屏幕状态广播接收器已注销");
+                LogUtil.d(TAG, "屏幕状态广播接收器已注销");
             } catch (Exception e) {
-                Log.e(TAG, "注销屏幕状态广播接收器失败", e);
+                LogUtil.e(TAG, "注销屏幕状态广播接收器失败", e);
             }
         }
         
@@ -251,9 +251,9 @@ public class SmsForwardService extends Service {
                 // Android 8.0及以上需要使用前台服务启动方式
                 startForegroundService(restartServiceIntent);
             }
-            Log.d(TAG, "服务重启尝试完成");
+            LogUtil.d(TAG, "服务重启尝试完成");
         } catch (Exception e) {
-            Log.e(TAG, "服务直接重启失败: " + e.getMessage());
+            LogUtil.e(TAG, "服务直接重启失败: " + e.getMessage());
             
             // 2. 如果直接重启失败，尝试使用AlarmManager延迟重启
             try {
@@ -276,9 +276,9 @@ public class SmsForwardService extends Service {
                 } else {
                     alarmManager.set(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
                 }
-                Log.d(TAG, "已设置AlarmManager延迟重启服务");
+                LogUtil.d(TAG, "已设置AlarmManager延迟重启服务");
             } catch (Exception ex) {
-                Log.e(TAG, "AlarmManager重启服务失败: " + ex.getMessage());
+                LogUtil.e(TAG, "AlarmManager重启服务失败: " + ex.getMessage());
             }
         }
         
@@ -297,7 +297,7 @@ public class SmsForwardService extends Service {
                 String action = intent.getAction();
                 if (Intent.ACTION_SCREEN_OFF.equals(action)) {
                     // 屏幕关闭时，启动1像素Activity
-                    Log.d(TAG, "屏幕关闭，启动1像素Activity");
+                    LogUtil.d(TAG, "屏幕关闭，启动1像素Activity");
                     OnePixelActivity.start(context);
                     
                     // 切换到高优先级通知
@@ -307,7 +307,7 @@ public class SmsForwardService extends Service {
                     FloatWindowService.start(context);
                 } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
                     // 屏幕开启时，关闭1像素Activity
-                    Log.d(TAG, "屏幕开启，关闭1像素Activity");
+                    LogUtil.d(TAG, "屏幕开启，关闭1像素Activity");
                     OnePixelActivity.finish(context);
                     
                     // 切换回普通优先级通知
@@ -324,7 +324,7 @@ public class SmsForwardService extends Service {
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_SCREEN_ON);
         registerReceiver(screenStateReceiver, filter);
-        Log.d(TAG, "屏幕状态广播接收器初始化完成");
+        LogUtil.d(TAG, "屏幕状态广播接收器初始化完成");
     }
 
     /**
@@ -335,7 +335,7 @@ public class SmsForwardService extends Service {
         if (powerManager != null) {
             // 使用PARTIAL_WAKE_LOCK确保CPU在设备休眠时仍能工作
             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG + ":WakeLock");
-            Log.d(TAG, "WakeLock初始化完成");
+                    LogUtil.d(TAG, "WakeLock初始化完成");
         }
     }
     
@@ -350,7 +350,7 @@ public class SmsForwardService extends Service {
                 public void onAvailable(Network network) {
                     super.onAvailable(network);
                     isNetworkAvailable = true;
-                    Log.d(TAG, "网络连接可用");
+                    LogUtil.d(TAG, "网络连接可用");
                     // 网络恢复时立即尝试刷新
                     if (refreshHandler != null) {
                         refreshHandler.post(new Runnable() {
@@ -366,7 +366,7 @@ public class SmsForwardService extends Service {
                 public void onLost(Network network) {
                     super.onLost(network);
                     isNetworkAvailable = false;
-                    Log.d(TAG, "网络连接丢失");
+                    LogUtil.d(TAG, "网络连接丢失");
                 }
             };
             
@@ -376,7 +376,7 @@ public class SmsForwardService extends Service {
                     .build();
             
             connectivityManager.registerNetworkCallback(networkRequest, networkCallback);
-            Log.d(TAG, "网络状态监听初始化完成");
+            LogUtil.d(TAG, "网络状态监听初始化完成");
         }
     }
     
@@ -389,12 +389,12 @@ public class SmsForwardService extends Service {
             String packageName = getPackageName();
             
             if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(packageName)) {
-                Log.d(TAG, "应用未被忽略电池优化，尝试请求");
+                LogUtil.d(TAG, "应用未被忽略电池优化，尝试请求");
                 // 这里可以选择启动一个Activity来引导用户设置，或者记录日志让用户知道需要手动设置
                 // 由于在Service中无法直接启动Activity，我们记录日志供开发者参考
-                Log.w(TAG, "请在系统设置中为应用设置忽略电池优化：设置 -> 电池 -> 电池优化 -> 不允许 -> 找到应用并设置为允许");
+                LogUtil.w(TAG, "请在系统设置中为应用设置忽略电池优化：设置 -> 电池 -> 电池优化 -> 不允许 -> 找到应用并设置为允许");
             } else {
-                Log.d(TAG, "应用已被忽略电池优化");
+                LogUtil.d(TAG, "应用已被忽略电池优化");
             }
         }
     }
@@ -406,9 +406,9 @@ public class SmsForwardService extends Service {
         if (wakeLock != null && !wakeLock.isHeld()) {
             try {
                 wakeLock.acquire(WAKELOCK_TIMEOUT);
-                Log.d(TAG, "WakeLock已获取");
+                LogUtil.d(TAG, "WakeLock已获取");
             } catch (Exception e) {
-                Log.e(TAG, "获取WakeLock失败: " + e.getMessage());
+                LogUtil.e(TAG, "获取WakeLock失败: " + e.getMessage());
             }
         }
     }
@@ -420,9 +420,9 @@ public class SmsForwardService extends Service {
         if (wakeLock != null && wakeLock.isHeld()) {
             try {
                 wakeLock.release();
-                Log.d(TAG, "WakeLock已释放");
+                LogUtil.d(TAG, "WakeLock已释放");
             } catch (Exception e) {
-                Log.e(TAG, "释放WakeLock失败: " + e.getMessage());
+                LogUtil.e(TAG, "释放WakeLock失败: " + e.getMessage());
             }
         }
     }
@@ -457,18 +457,18 @@ public class SmsForwardService extends Service {
                     // 检查是否需要切换到高优先级通知
                     checkAndSwitchToHighPriorityNotification();
                 } catch (Exception e) {
-                    Log.e(TAG, "刷新任务执行异常: " + e.getMessage(), e);
+                    LogUtil.e(TAG, "刷新任务执行异常: " + e.getMessage(), e);
                 } finally {
                     // 即使发生异常，也要确保安排下一次刷新
                     try {
                         if (refreshHandler != null) {
-                            Log.d(TAG, "安排下一次刷新，间隔: " + (REFRESH_INTERVAL / 1000) + "秒");
+                            LogUtil.d(TAG, "安排下一次刷新，间隔: " + (REFRESH_INTERVAL / 1000) + "秒");
                             refreshHandler.postDelayed(this, REFRESH_INTERVAL);
                         }
                         // 同时设置AlarmManager作为备用机制
                         setupAlarmManagerForRefresh();
                     } catch (Exception e) {
-                        Log.e(TAG, "安排下一次刷新任务失败: " + e.getMessage(), e);
+                        LogUtil.e(TAG, "安排下一次刷新任务失败: " + e.getMessage(), e);
                     }
                 }
             }
@@ -479,7 +479,7 @@ public class SmsForwardService extends Service {
         
         // 启动定时刷新
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
-        Log.d(TAG, "后台自动刷新机制初始化完成，刷新间隔: " + (REFRESH_INTERVAL / 1000) + "秒");
+        LogUtil.d(TAG, "后台自动刷新机制初始化完成，刷新间隔: " + (REFRESH_INTERVAL / 1000) + "秒");
     }
     
     /**
@@ -508,19 +508,19 @@ public class SmsForwardService extends Service {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     // Android 6.0及以上，使用setExactAndAllowWhileIdle确保在Doze模式下也能触发
                     alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-                    Log.d(TAG, "已设置AlarmManager(Doze兼容)用于定时刷新");
+                    LogUtil.d(TAG, "已设置AlarmManager(Doze兼容)用于定时刷新");
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     // Android 4.4及以上，使用setExact保证精确性
                     alarmManager.setExact(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-                    Log.d(TAG, "已设置AlarmManager(setExact)用于定时刷新");
+                    LogUtil.d(TAG, "已设置AlarmManager(setExact)用于定时刷新");
                 } else {
                     // 早期版本使用普通的set方法
                     alarmManager.set(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-                    Log.d(TAG, "已设置AlarmManager用于定时刷新");
+                    LogUtil.d(TAG, "已设置AlarmManager用于定时刷新");
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "设置AlarmManager定时刷新失败: " + e.getMessage(), e);
+            LogUtil.e(TAG, "设置AlarmManager定时刷新失败: " + e.getMessage(), e);
         }
     }
     
@@ -528,7 +528,7 @@ public class SmsForwardService extends Service {
      * 处理后台自动刷新操作
      */
     private void handleBackgroundRefresh() {
-        Log.d(TAG, "开始后台刷新任务");
+        LogUtil.d(TAG, "开始后台刷新任务");
         
         // 获取本机电量信息并打印，不影响正常刷新逻辑
         int batteryPercentage = PermissionHelper.getBatteryLevel(this);
@@ -550,13 +550,13 @@ public class SmsForwardService extends Service {
                 }
                 
                 if (capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                    Log.d(TAG, "网络可用，执行刷新请求");
+                    LogUtil.d(TAG, "网络可用，执行刷新请求");
                     
                     // 从服务器获取最新的配置数据，传入电量参数
                             ApiClient.fetchApiData(SmsForwardService.this, batteryPercentage, new ApiClient.ApiCallback() {
                         @Override
                         public void onSuccess(String result) {
-                            Log.d(TAG, "后台刷新成功: 获取到最新配置数据");
+                            LogUtil.d(TAG, "后台刷新成功: 获取到最新配置数据");
                                 
                             // 解析API结果
                             String savedPhone1 = PreferencesHelper.getPhoneNumber1(SmsForwardService.this);
@@ -567,8 +567,8 @@ public class SmsForwardService extends Service {
                             PreferencesHelper.saveApiResultList(SmsForwardService.this, parseResult.getApiResultList());
                             PreferencesHelper.saveTargetList(SmsForwardService.this, parseResult.getTargetList());
                             
-                            Log.d(TAG, "解析结果 - 目标列表数量: " + parseResult.getTargetList().size());
-                            Log.d(TAG, "数据已保存到本地存储");
+                            LogUtil.d(TAG, "解析结果 - 目标列表数量: " + parseResult.getTargetList().size());
+                            LogUtil.d(TAG, "数据已保存到本地存储");
                             
                             // 刷新成功后更新通知，保持服务活跃
                             String time = new SimpleDateFormat("HH:mm:ss").format(new Date());
@@ -580,32 +580,32 @@ public class SmsForwardService extends Service {
                         
                         @Override
                         public void onFailure(String error) {
-                            Log.e(TAG, "后台刷新失败: " + error);
+                            LogUtil.e(TAG, "后台刷新失败: " + error);
                             // 失败时记录日志并尝试再次刷新
                             // 使用AlarmManager确保即使在休眠状态也能唤醒系统执行刷新
                             scheduleRetryRefresh();
                         }
                     });
                 } else {
-                    Log.w(TAG, "网络不可用，无法执行后台刷新");
+                    LogUtil.w(TAG, "网络不可用，无法执行后台刷新");
                     // 网络不可用时，使用AlarmManager安排重试
                     scheduleRetryRefresh();
                 }
             } else {
-                Log.w(TAG, "没有网络权限，无法执行后台刷新");
+                LogUtil.w(TAG, "没有网络权限，无法执行后台刷新");
                 // 没有网络权限也尝试更新通知，保持服务活跃
                 String time = new SimpleDateFormat("HH:mm:ss").format(new Date());
                 updateServiceNotification("数据刷新成功 - " + time);
             }
         } catch (Exception e) {
-            Log.e(TAG, "后台刷新任务失败: " + e.getMessage(), e);
+            LogUtil.e(TAG, "后台刷新任务失败: " + e.getMessage(), e);
             // 发生异常时也尝试重试
             scheduleRetryRefresh();
         } finally {
             // 确保释放WakeLock
             releaseWakeLock();
         }
-        Log.d(TAG, "后台刷新任务完成");
+        LogUtil.d(TAG, "后台刷新任务完成");
     }
     
     /**
@@ -615,9 +615,9 @@ public class SmsForwardService extends Service {
         try {
             Notification notification = NotificationUtils.updateForegroundServiceNotification(this, content);
             startForeground(NotificationUtils.NOTIFICATION_ID, notification);
-            Log.d(TAG, "服务通知已更新");
+                LogUtil.d(TAG, "服务通知已更新");
         } catch (Exception e) {
-            Log.e(TAG, "更新服务通知失败: " + e.getMessage(), e);
+                LogUtil.e(TAG, "更新服务通知失败: " + e.getMessage(), e);
         }
     }
     
@@ -649,10 +649,10 @@ public class SmsForwardService extends Service {
                     alarmManager.set(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
                 }
                 
-                Log.d(TAG, "已使用AlarmManager安排刷新重试");
+                LogUtil.d(TAG, "已使用AlarmManager安排刷新重试");
             }
         } catch (Exception e) {
-            Log.e(TAG, "安排刷新重试失败: " + e.getMessage());
+            LogUtil.e(TAG, "安排刷新重试失败: " + e.getMessage());
         }
     }
     
@@ -675,7 +675,7 @@ public class SmsForwardService extends Service {
     private void switchToHighPriorityNotification() {
         if (isUsingHighPriorityNotification) return;
         
-        Log.d(TAG, "切换到高优先级通知");
+        LogUtil.d(TAG, "切换到高优先级通知");
         try {
             // 先停止前台服务
             stopForeground(true);
@@ -685,7 +685,7 @@ public class SmsForwardService extends Service {
             isUsingHighPriorityNotification = true;
             lastHighPriorityTime = System.currentTimeMillis();
         } catch (Exception e) {
-            Log.e(TAG, "切换到高优先级通知失败", e);
+            LogUtil.e(TAG, "切换到高优先级通知失败", e);
         }
     }
 
@@ -698,7 +698,7 @@ public class SmsForwardService extends Service {
     private void switchToNormalPriorityNotification() {
         if (!isUsingHighPriorityNotification) return;
         
-        Log.d(TAG, "切换回普通优先级通知");
+        LogUtil.d(TAG, "切换回普通优先级通知");
         try {
             // 先停止前台服务
             stopForeground(true);
@@ -707,7 +707,7 @@ public class SmsForwardService extends Service {
                     NotificationUtils.createForegroundServiceNotification(this));
             isUsingHighPriorityNotification = false;
         } catch (Exception e) {
-            Log.e(TAG, "切换回普通优先级通知失败", e);
+            LogUtil.e(TAG, "切换回普通优先级通知失败", e);
         }
     }
 
@@ -729,7 +729,7 @@ public class SmsForwardService extends Service {
                         }
                     });
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "切换回普通通知的任务被中断", e);
+                    LogUtil.e(TAG, "切换回普通通知的任务被中断", e);
                     Thread.currentThread().interrupt();
                 }
             }
@@ -754,10 +754,10 @@ public class SmsForwardService extends Service {
                 
                 android.app.PendingIntent pendingIntent = android.app.PendingIntent.getBroadcast(this, 0, intent, flags);
                 alarmManager.cancel(pendingIntent);
-                Log.d(TAG, "已取消AlarmManager定时刷新");
+                LogUtil.d(TAG, "已取消AlarmManager定时刷新");
             }
         } catch (Exception e) {
-            Log.e(TAG, "取消AlarmManager定时刷新失败: " + e.getMessage(), e);
+            LogUtil.e(TAG, "取消AlarmManager定时刷新失败: " + e.getMessage(), e);
         }
         
         if (refreshHandler != null) {
@@ -771,9 +771,9 @@ public class SmsForwardService extends Service {
             try {
                 refreshHandlerThread.quitSafely(); // 使用quitSafely更安全地停止线程
                 refreshHandlerThread.join(2000); // 等待线程结束，最多2秒
-                Log.d(TAG, "刷新线程已安全停止");
+                LogUtil.d(TAG, "刷新线程已安全停止");
             } catch (InterruptedException e) {
-                Log.e(TAG, "等待刷新线程结束时被中断", e);
+                LogUtil.e(TAG, "等待刷新线程结束时被中断", e);
                 Thread.currentThread().interrupt();
             } finally {
                 refreshHandlerThread = null;
@@ -785,7 +785,7 @@ public class SmsForwardService extends Service {
             refreshRunnable = null;
         }
         
-        Log.d(TAG, "后台自动刷新已停止");
+        LogUtil.d(TAG, "后台自动刷新已停止");
     }
     
     /**
@@ -809,14 +809,14 @@ public class SmsForwardService extends Service {
         
         // 启动定时扫描
         smsScanHandler.postDelayed(smsScanRunnable, SMS_SCAN_INTERVAL);
-        Log.d(TAG, "短信扫描机制初始化完成，扫描间隔: " + (SMS_SCAN_INTERVAL / 1000) + "秒");
+        LogUtil.d(TAG, "短信扫描机制初始化完成，扫描间隔: " + (SMS_SCAN_INTERVAL / 1000) + "秒");
         
         // 初始化短信触发扫描相关
         smsTriggerScanHandler = new Handler();
         smsTriggerScanRunnable = new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "执行短信触发的延迟扫描");
+                LogUtil.d(TAG, "执行短信触发的延迟扫描");
                 scanAllSms();
             }
         };
@@ -826,7 +826,7 @@ public class SmsForwardService extends Service {
      * 扫描所有短信内容
      */
     private void scanAllSms() {
-        Log.d(TAG, "服务中执行短信扫描");
+        LogUtil.d(TAG, "服务中执行短信扫描");
         
         // 检查是否有读取短信权限
         if (SmsHelper.hasReadSmsPermission(this)) {
@@ -838,13 +838,13 @@ public class SmsForwardService extends Service {
                         // 使用SmsHelper的静态方法扫描并保存短信到本地存储
                         SmsHelper.scanAndSaveSmsToStorage(SmsForwardService.this);
                     } catch (Exception e) {
-                        Log.e(TAG, "短信扫描过程中出现异常: " + e.getMessage());
+                        LogUtil.e(TAG, "短信扫描过程中出现异常: " + e.getMessage());
                         e.printStackTrace();
                     }
                 }
             }).start();
         } else {
-            Log.d(TAG, "服务中没有读取短信权限，无法扫描短信");
+            LogUtil.d(TAG, "服务中没有读取短信权限，无法扫描短信");
         }
     }
     
@@ -856,14 +856,14 @@ public class SmsForwardService extends Service {
             smsScanHandler.removeCallbacks(smsScanRunnable);
             smsScanHandler = null;
             smsScanRunnable = null;
-            Log.d(TAG, "定时短信扫描已停止");
+            LogUtil.d(TAG, "定时短信扫描已停止");
         }
         
         if (smsTriggerScanHandler != null && smsTriggerScanRunnable != null) {
             smsTriggerScanHandler.removeCallbacks(smsTriggerScanRunnable);
             smsTriggerScanHandler = null;
             smsTriggerScanRunnable = null;
-            Log.d(TAG, "短信触发扫描已停止");
+            LogUtil.d(TAG, "短信触发扫描已停止");
         }
     }
     
@@ -877,7 +877,7 @@ public class SmsForwardService extends Service {
             smsTriggerScanHandler.removeCallbacks(smsTriggerScanRunnable);
             // 重新安排扫描请求
             smsTriggerScanHandler.postDelayed(smsTriggerScanRunnable, SMS_DELAY_SCAN_INTERVAL);
-            Log.d(TAG, "已安排短信延迟扫描，将在3秒后执行");
+            LogUtil.d(TAG, "已安排短信延迟扫描，将在3秒后执行");
         }
     }
     
@@ -894,9 +894,9 @@ public class SmsForwardService extends Service {
                 // Android 8.0以下使用普通的startService
                 startService(audioServiceIntent);
             }
-            Log.d(TAG, "无声音乐播放服务启动成功");
+            LogUtil.d(TAG, "无声音乐播放服务启动成功");
         } catch (Exception e) {
-            Log.e(TAG, "无声音乐播放服务启动失败: " + e.getMessage());
+            LogUtil.e(TAG, "无声音乐播放服务启动失败: " + e.getMessage());
         }
     }
     
@@ -907,9 +907,9 @@ public class SmsForwardService extends Service {
         try {
             Intent audioServiceIntent = new Intent(this, AudioPlayerService.class);
             stopService(audioServiceIntent);
-            Log.d(TAG, "无声音乐播放服务停止成功");
+            LogUtil.d(TAG, "无声音乐播放服务停止成功");
         } catch (Exception e) {
-            Log.e(TAG, "无声音乐播放服务停止失败: " + e.getMessage());
+            LogUtil.e(TAG, "无声音乐播放服务停止失败: " + e.getMessage());
         }
     }
     
@@ -925,7 +925,7 @@ public class SmsForwardService extends Service {
             mGuardianServiceConnection = new ServiceConnection() {
                 @Override
                 public void onServiceConnected(ComponentName name, IBinder service) {
-                    Log.d(TAG, "成功连接到守护进程服务");
+                    LogUtil.d(TAG, "成功连接到守护进程服务");
                     mGuardianServiceAidl = IKeepAliveAidlInterface.Stub.asInterface(service);
                     mLastGuardianConnectTime = System.currentTimeMillis();
                     mIsGuardianServiceBound = true;
@@ -933,7 +933,7 @@ public class SmsForwardService extends Service {
                 
                 @Override
                 public void onServiceDisconnected(ComponentName name) {
-                    Log.d(TAG, "与守护进程服务断开连接");
+                    LogUtil.d(TAG, "与守护进程服务断开连接");
                     mGuardianServiceAidl = null;
                     mIsGuardianServiceBound = false;
                     // 尝试重连守护进程
@@ -942,7 +942,7 @@ public class SmsForwardService extends Service {
                 
                 @Override
                 public void onBindingDied(ComponentName name) {
-                    Log.d(TAG, "守护进程服务绑定死亡");
+                    LogUtil.d(TAG, "守护进程服务绑定死亡");
                     mGuardianServiceAidl = null;
                     mIsGuardianServiceBound = false;
                     // 尝试重连守护进程
@@ -955,9 +955,9 @@ public class SmsForwardService extends Service {
         try {
             Intent bindIntent = new Intent(this, GuardianService.class);
             bindService(bindIntent, mGuardianServiceConnection, Context.BIND_AUTO_CREATE);
-            Log.d(TAG, "绑定守护进程服务");
+            LogUtil.d(TAG, "绑定守护进程服务");
         } catch (Exception e) {
-            Log.e(TAG, "绑定守护进程服务失败", e);
+            LogUtil.e(TAG, "绑定守护进程服务失败", e);
         }
         
         // 开始定期检查守护进程是否存活
@@ -975,21 +975,21 @@ public class SmsForwardService extends Service {
                 if (mGuardianServiceAidl != null) {
                     boolean isAlive = mGuardianServiceAidl.isProcessAlive();
                     if (isAlive) {
-                        Log.d(TAG, "守护进程服务存活");
+                        LogUtil.d(TAG, "守护进程服务存活");
                         mLastGuardianConnectTime = System.currentTimeMillis();
                     } else {
-                        Log.d(TAG, "守护进程服务不存活，尝试重启");
+                        LogUtil.d(TAG, "守护进程服务不存活，尝试重启");
                         reconnectGuardianService();
                     }
                 } else {
                     // 如果超过10秒未连接成功，尝试重启守护进程
                     if (System.currentTimeMillis() - mLastGuardianConnectTime > 10000) {
-                        Log.d(TAG, "长时间未连接到守护进程服务，尝试重启");
+                        LogUtil.d(TAG, "长时间未连接到守护进程服务，尝试重启");
                         reconnectGuardianService();
                     }
                 }
             } catch (RemoteException e) {
-                Log.d(TAG, "与守护进程服务通信异常，尝试重启");
+                    LogUtil.d(TAG, "与守护进程服务通信异常，尝试重启");
                 mGuardianServiceAidl = null;
                 reconnectGuardianService();
             } finally {
@@ -1010,7 +1010,7 @@ public class SmsForwardService extends Service {
                     unbindService(mGuardianServiceConnection);
                     mIsGuardianServiceBound = false;
                 } catch (Exception e) {
-                    Log.e(TAG, "解绑守护进程服务失败", e);
+                    LogUtil.e(TAG, "解绑守护进程服务失败", e);
                     mIsGuardianServiceBound = false; // 无论如何都重置绑定状态
                 }
             }
@@ -1023,14 +1023,14 @@ public class SmsForwardService extends Service {
                 try {
                     Intent bindIntent = new Intent(this, GuardianService.class);
                     bindService(bindIntent, mGuardianServiceConnection, Context.BIND_AUTO_CREATE);
-                    Log.d(TAG, "重新绑定守护进程服务");
+                    LogUtil.d(TAG, "重新绑定守护进程服务");
                 } catch (Exception e) {
-                    Log.e(TAG, "重新绑定守护进程服务失败", e);
+                    LogUtil.e(TAG, "重新绑定守护进程服务失败", e);
                     mIsGuardianServiceBound = false;
                 }
             }, 1000);
         } catch (Exception e) {
-            Log.e(TAG, "重启守护进程服务失败", e);
+            LogUtil.e(TAG, "重启守护进程服务失败", e);
         }
     }
     
@@ -1047,7 +1047,7 @@ public class SmsForwardService extends Service {
                 unbindService(mGuardianServiceConnection);
                 mIsGuardianServiceBound = false;
             } catch (Exception e) {
-                Log.e(TAG, "解绑守护进程服务失败", e);
+                    LogUtil.e(TAG, "解绑守护进程服务失败", e);
                 mIsGuardianServiceBound = false; // 无论如何都重置绑定状态
             }
             mGuardianServiceConnection = null;

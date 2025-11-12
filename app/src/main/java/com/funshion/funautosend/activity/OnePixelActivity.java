@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import android.view.Gravity;
 import android.view.Window;
 import android.view.WindowManager;
@@ -25,14 +25,14 @@ public class OnePixelActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "OnePixelActivity onCreate");
+        LogUtil.d(TAG, "OnePixelActivity onCreate");
 
         // 注册广播接收器，用于接收关闭Activity的广播
         finishReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (intent != null && ACTION_FINISH_ONE_PIXEL.equals(intent.getAction())) {
-                    Log.d(TAG, "接收到关闭OnePixelActivity的广播");
+                    LogUtil.d(TAG, "接收到关闭OnePixelActivity的广播");
                     finish();
                 }
             }
@@ -53,7 +53,7 @@ public class OnePixelActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "OnePixelActivity onResume");
+        LogUtil.d(TAG, "OnePixelActivity onResume");
         // 当应用回到前台时，关闭1像素Activity
         if (isAppInForeground()) {
             finish();
@@ -63,7 +63,7 @@ public class OnePixelActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "OnePixelActivity onDestroy");
+        LogUtil.d(TAG, "OnePixelActivity onDestroy");
         // 注销广播接收器
         if (finishReceiver != null) {
             unregisterReceiver(finishReceiver);

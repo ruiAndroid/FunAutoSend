@@ -1,7 +1,7 @@
 package com.funshion.funautosend.util;
 
 import android.content.Context;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import androidx.work.Configuration;
 import androidx.work.Constraints;
@@ -42,20 +42,20 @@ public class WorkManagerKeepAliveHelper {
         try {
             // 尝试获取WorkManager实例
             WorkManager instance = WorkManager.getInstance(this.context);
-            Log.d(TAG, "成功获取WorkManager实例");
+            LogUtil.d(TAG, "成功获取WorkManager实例");
             return instance;
         } catch (IllegalStateException e) {
-            Log.e(TAG, "获取WorkManager实例失败，尝试手动初始化: " + e.getMessage());
+            LogUtil.e(TAG, "获取WorkManager实例失败，尝试手动初始化: " + e.getMessage());
             try {
                 // 手动初始化WorkManager
                 Configuration configuration = new Configuration.Builder()
-                        .setMinimumLoggingLevel(Log.INFO)
+                        .setMinimumLoggingLevel(android.util.Log.INFO)
                         .build();
                 WorkManager.initialize(this.context, configuration);
-                Log.d(TAG, "WorkManager手动初始化成功");
+                LogUtil.d(TAG, "WorkManager手动初始化成功");
                 return WorkManager.getInstance(this.context);
             } catch (Exception ex) {
-                Log.e(TAG, "WorkManager手动初始化也失败: " + ex.getMessage());
+                LogUtil.e(TAG, "WorkManager手动初始化也失败: " + ex.getMessage());
                 return null;
             }
         }
@@ -66,14 +66,14 @@ public class WorkManagerKeepAliveHelper {
      */
     public void startPeriodicKeepAliveWork() {
         try {
-            Log.d(TAG, "启动WorkManager定期保活任务");
+            LogUtil.d(TAG, "启动WorkManager定期保活任务");
             
             // 检查workManager实例是否可用
             if (workManager == null) {
-                Log.e(TAG, "WorkManager实例不可用，尝试重新获取");
+                LogUtil.e(TAG, "WorkManager实例不可用，尝试重新获取");
                 workManager = getWorkManagerInstance();
                 if (workManager == null) {
-                    Log.e(TAG, "重新获取WorkManager实例失败，无法启动定期保活任务");
+                    LogUtil.e(TAG, "重新获取WorkManager实例失败，无法启动定期保活任务");
                     return;
                 }
             }
@@ -110,9 +110,9 @@ public class WorkManagerKeepAliveHelper {
                     ExistingPeriodicWorkPolicy.KEEP,
                     periodicWorkRequest);
             
-            Log.d(TAG, "WorkManager定期保活任务调度成功，间隔：" + MIN_INTERVAL_MINUTES + "分钟");
+            LogUtil.d(TAG, "WorkManager定期保活任务调度成功，间隔：" + MIN_INTERVAL_MINUTES + "分钟");
         } catch (Exception e) {
-            Log.e(TAG, "启动WorkManager定期保活任务失败: " + e.getMessage());
+            LogUtil.e(TAG, "启动WorkManager定期保活任务失败: " + e.getMessage());
         }
     }
     
@@ -121,14 +121,14 @@ public class WorkManagerKeepAliveHelper {
      */
     public void stopPeriodicKeepAliveWork() {
         try {
-            Log.d(TAG, "停止WorkManager定期保活任务");
+            LogUtil.d(TAG, "停止WorkManager定期保活任务");
             
             // 取消指定名称的定期工作
             workManager.cancelUniqueWork(WORK_NAME);
             
-            Log.d(TAG, "WorkManager定期保活任务停止成功");
+            LogUtil.d(TAG, "WorkManager定期保活任务停止成功");
         } catch (Exception e) {
-            Log.e(TAG, "停止WorkManager定期保活任务失败: " + e.getMessage());
+            LogUtil.e(TAG, "停止WorkManager定期保活任务失败: " + e.getMessage());
         }
     }
     
@@ -138,14 +138,14 @@ public class WorkManagerKeepAliveHelper {
      */
     public void runKeepAliveCheckNow() {
         try {
-            Log.d(TAG, "立即执行WorkManager保活检查");
+            LogUtil.d(TAG, "立即执行WorkManager保活检查");
             
             // 检查workManager实例是否可用
             if (workManager == null) {
-                Log.e(TAG, "WorkManager实例不可用，尝试重新获取");
+                LogUtil.e(TAG, "WorkManager实例不可用，尝试重新获取");
                 workManager = getWorkManagerInstance();
                 if (workManager == null) {
-                    Log.e(TAG, "重新获取WorkManager实例失败，无法执行立即保活检查");
+                    LogUtil.e(TAG, "重新获取WorkManager实例失败，无法执行立即保活检查");
                     return;
                 }
             }
@@ -162,9 +162,9 @@ public class WorkManagerKeepAliveHelper {
                     ExistingWorkPolicy.REPLACE,
                     oneTimeWorkRequest);
             
-            Log.d(TAG, "WorkManager立即保活检查调度成功");
+            LogUtil.d(TAG, "WorkManager立即保活检查调度成功");
         } catch (Exception e) {
-            Log.e(TAG, "执行WorkManager立即保活检查失败: " + e.getMessage());
+            LogUtil.e(TAG, "执行WorkManager立即保活检查失败: " + e.getMessage());
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.funshion.funautosend.util;
 
 import android.content.Context;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -41,6 +43,11 @@ public class ApiClient {
     private static final String REPORT_URL = "https://mgc.funshion.com/service/openapi/reportSmsForward";
     // 授权令牌
     private static final String AUTH_TOKEN = "Bearer sk-716430cd7c376bc82ca6f2e014bbb3bf1748505057779RLUCKDCJg12S";
+    
+    // 创建独立的上报专用线程池，确保上报操作不会被其他网络请求阻塞
+    private static final ExecutorService REPORT_EXECUTOR = Executors.newFixedThreadPool(
+            Math.max(5, Runtime.getRuntime().availableProcessors() * 3)); // 最小5个线程，CPU核心数*3
+    
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS) // 连接超时设置为30秒
             .readTimeout(30, TimeUnit.SECONDS)    // 读取超时设置为30秒
@@ -98,7 +105,7 @@ public class ApiClient {
         String requestUrl = urlBuilder.toString();
         
         // 打印完整的请求参数
-        Log.d(TAG, "发送API请求: URL=" + requestUrl + ", Authorization=" + AUTH_TOKEN + ", battery=" + batteryPercentage);
+        LogUtil.d(TAG, "发送API请求: URL=" + requestUrl + ", Authorization=" + AUTH_TOKEN + ", battery=" + batteryPercentage);
         
         Request request = new Request.Builder()
                 .url(requestUrl)
@@ -110,7 +117,7 @@ public class ApiClient {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.e(TAG, "请求失败: " + e.getMessage());
+                LogUtil.e(TAG, "请求失败: " + e.getMessage());
                 if (callback != null) {
                     callback.onFailure("请求失败: " + e.getMessage());
                 }
@@ -138,7 +145,7 @@ public class ApiClient {
                             // 保存最后更新时间
                             PreferencesHelper.saveLastUpdateTime(context);
                             
-                            Log.d(TAG, "API数据已保存到本地存储");
+                            LogUtil.d(TAG, "API数据已保存到本地存储");
                         }
                         
                         if (callback != null) {
@@ -147,10 +154,11 @@ public class ApiClient {
                     } else {
                         if (callback != null) {
                             callback.onFailure("请求失败，响应码: " + response.code());
+                            LogUtil.e(TAG, "请求失败，响应码: " + response.code());
                         }
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "处理响应失败: " + e.getMessage());
+                    LogUtil.e(TAG, "处理响应失败: " + e.getMessage());
                     if (callback != null) {
                         callback.onFailure("处理响应失败: " + e.getMessage());
                     }
@@ -224,7 +232,7 @@ public class ApiClient {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, "JSON解析错误: " + e.getMessage());
+            LogUtil.e(TAG, "JSON解析错误: " + e.getMessage());
             Map<String, Object> item = new HashMap<>();
             item.put("title", "配置列表(解析失败)");
             Map<String, String> fields = new HashMap<>();
@@ -360,30 +368,34 @@ public class ApiClient {
      * @param callback 回调接口，用于处理请求结果
      */
     public static void reportSmsData(final Context context, final SmsReportRequest smsReportRequest, final ApiCallback callback) {
-        try {
-            // 转换请求参数为JSON字符串
-            String jsonBody = gson.toJson(smsReportRequest);
-            
-            // 打印完整的请求参数
-            Log.d(TAG, "上报短信数据: URL=" + REPORT_URL + ", RequestBody=" + jsonBody);
-            
-            // 创建请求体
-            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-            RequestBody body = RequestBody.create(jsonBody, JSON);
-            
-            // 构建请求
-            Request request = new Request.Builder()
-                    .url(REPORT_URL)
-                    .post(body)
-                    // 添加Authorization请求头
-                    .header("Authorization", AUTH_TOKEN)
-                    .build();
-            
-            // 发送请求
-            client.newCall(request).enqueue(new Callback() {
+        // 使用独立的上报线程池执行上报操作，避免与其他网络请求竞争资源
+        REPORT_EXECUTOR.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 转换请求参数为JSON字符串
+                    String jsonBody = gson.toJson(smsReportRequest);
+                    
+                    // 打印完整的请求参数
+                    LogUtil.d(TAG, "上报短信数据: URL=" + REPORT_URL + ", RequestBody=" + jsonBody);
+                    
+                    // 创建请求体
+                    MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+                    RequestBody body = RequestBody.create(jsonBody, JSON);
+                    
+                    // 构建请求
+                    Request request = new Request.Builder()
+                            .url(REPORT_URL)
+                            .post(body)
+                            // 添加Authorization请求头
+                            .header("Authorization", AUTH_TOKEN)
+                            .build();
+                    
+                    // 发送请求
+                    client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Log.e(TAG, "短信上报失败: " + e.getMessage());
+                    LogUtil.e(TAG, "短信上报失败: " + e.getMessage());
                     if (callback != null) {
                         callback.onFailure("短信上报失败: " + e.getMessage());
                     }
@@ -400,13 +412,13 @@ public class ApiClient {
                             }
                         } else {
                             String errorMsg = "短信上报失败，响应码: " + response.code();
-                            Log.e(TAG, errorMsg);
+                            LogUtil.e(TAG, errorMsg);
                             if (callback != null) {
                                 callback.onFailure(errorMsg);
                             }
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "处理短信上报响应失败: " + e.getMessage());
+                        LogUtil.e(TAG, "处理短信上报响应失败: " + e.getMessage());
                         if (callback != null) {
                             callback.onFailure("处理短信上报响应失败: " + e.getMessage());
                         }
@@ -418,11 +430,13 @@ public class ApiClient {
                 }
             });
         } catch (Exception e) {
-            Log.e(TAG, "准备短信上报请求失败: " + e.getMessage());
-            if (callback != null) {
-                callback.onFailure("准备短信上报请求失败: " + e.getMessage());
+                    LogUtil.e(TAG, "准备短信上报请求失败: " + e.getMessage());
+                    if (callback != null) {
+                        callback.onFailure("准备短信上报请求失败: " + e.getMessage());
+                    }
+                }
             }
-        }
+        });
     }
     
     /**
@@ -432,30 +446,34 @@ public class ApiClient {
      * @param callback 回调接口，用于处理请求结果
      */
     public static void reportEmailData(final Context context, final EmailReportRequest emailReportRequest, final ApiCallback callback) {
-        try {
-            // 转换请求参数为JSON字符串
-            String jsonBody = gson.toJson(emailReportRequest);
-            
-            // 打印完整的请求参数
-            Log.d(TAG, "上报邮件数据: URL=" + REPORT_URL + ", RequestBody=" + jsonBody);
-            
-            // 创建请求体
-            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-            RequestBody body = RequestBody.create(jsonBody, JSON);
-            
-            // 构建请求
-            Request request = new Request.Builder()
-                    .url(REPORT_URL)
-                    .post(body)
-                    // 添加Authorization请求头
-                    .header("Authorization", AUTH_TOKEN)
-                    .build();
-            
-            // 发送请求
-            client.newCall(request).enqueue(new Callback() {
+        // 使用独立的上报线程池执行上报操作，避免与其他网络请求竞争资源
+        REPORT_EXECUTOR.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 转换请求参数为JSON字符串
+                    String jsonBody = gson.toJson(emailReportRequest);
+                    
+                    // 打印完整的请求参数
+                    LogUtil.d(TAG, "上报邮件数据: URL=" + REPORT_URL + ", RequestBody=" + jsonBody);
+                    
+                    // 创建请求体
+                    MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+                    RequestBody body = RequestBody.create(jsonBody, JSON);
+                    
+                    // 构建请求
+                    Request request = new Request.Builder()
+                            .url(REPORT_URL)
+                            .post(body)
+                            // 添加Authorization请求头
+                            .header("Authorization", AUTH_TOKEN)
+                            .build();
+                    
+                    // 发送请求
+                    client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Log.e(TAG, "邮件上报失败: " + e.getMessage());
+                    LogUtil.e(TAG, "邮件上报失败: " + e.getMessage());
                     if (callback != null) {
                         callback.onFailure("邮件上报失败: " + e.getMessage());
                     }
@@ -472,13 +490,13 @@ public class ApiClient {
                             }
                         } else {
                             String errorMsg = "邮件上报失败，响应码: " + response.code();
-                            Log.e(TAG, errorMsg);
+                            LogUtil.e(TAG, errorMsg);
                             if (callback != null) {
                                 callback.onFailure(errorMsg);
                             }
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "处理邮件上报响应失败: " + e.getMessage());
+                        LogUtil.e(TAG, "处理邮件上报响应失败: " + e.getMessage());
                         if (callback != null) {
                             callback.onFailure("处理邮件上报响应失败: " + e.getMessage());
                         }
@@ -490,10 +508,12 @@ public class ApiClient {
                 }
             });
         } catch (Exception e) {
-            Log.e(TAG, "准备邮件上报请求失败: " + e.getMessage());
-            if (callback != null) {
-                callback.onFailure("准备邮件上报请求失败: " + e.getMessage());
+                    LogUtil.e(TAG, "准备邮件上报请求失败: " + e.getMessage());
+                    if (callback != null) {
+                        callback.onFailure("准备邮件上报请求失败: " + e.getMessage());
+                    }
+                }
             }
-        }
+        });
     }
 }

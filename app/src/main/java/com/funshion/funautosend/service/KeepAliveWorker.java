@@ -3,7 +3,7 @@ package com.funshion.funautosend.service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
@@ -24,7 +24,7 @@ public class KeepAliveWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        Log.d(TAG, "WorkManager保活任务执行，检查并重启前台服务");
+        LogUtil.d(TAG, "WorkManager保活任务执行，检查并重启前台服务");
         
         // 检查并启动SmsForwardService
         checkAndStartSmsForwardService();
@@ -57,7 +57,7 @@ public class KeepAliveWorker extends Worker {
             }
             return false;
         } catch (Exception e) {
-            Log.e(TAG, "检查服务运行状态时出错: " + e.getMessage());
+            LogUtil.e(TAG, "检查服务运行状态时出错: " + e.getMessage());
             return false;
         }
     }
@@ -69,7 +69,7 @@ public class KeepAliveWorker extends Worker {
         try {
             // 先检查服务是否已经在运行
             if (isServiceRunning(SmsForwardService.class)) {
-                Log.d(TAG, "SmsForwardService已经在运行，无需重复启动");
+                LogUtil.d(TAG, "SmsForwardService已经在运行，无需重复启动");
                 return;
             }
             
@@ -85,9 +85,9 @@ public class KeepAliveWorker extends Worker {
                 getApplicationContext().startService(serviceIntent);
             }
             
-            Log.d(TAG, "SmsForwardService启动成功");
+            LogUtil.d(TAG, "SmsForwardService启动成功");
         } catch (Exception e) {
-            Log.e(TAG, "SmsForwardService启动失败: " + e.getMessage());
+            LogUtil.e(TAG, "SmsForwardService启动失败: " + e.getMessage());
         }
     }
 
@@ -98,7 +98,7 @@ public class KeepAliveWorker extends Worker {
         try {
             // 先检查服务是否已经在运行
             if (isServiceRunning(AudioPlayerService.class)) {
-                Log.d(TAG, "AudioPlayerService已经在运行，无需重复启动");
+                LogUtil.d(TAG, "AudioPlayerService已经在运行，无需重复启动");
                 return;
             }
             
@@ -110,9 +110,9 @@ public class KeepAliveWorker extends Worker {
                 // Android 8.0以下使用普通的startService
                 getApplicationContext().startService(audioServiceIntent);
             }
-            Log.d(TAG, "AudioPlayerService启动成功");
+            LogUtil.d(TAG, "AudioPlayerService启动成功");
         } catch (Exception e) {
-            Log.e(TAG, "AudioPlayerService启动失败: " + e.getMessage());
+            LogUtil.e(TAG, "AudioPlayerService启动失败: " + e.getMessage());
         }
     }
 
@@ -123,7 +123,7 @@ public class KeepAliveWorker extends Worker {
         try {
             // 先检查服务是否已经在运行
             if (isServiceRunning(GuardianService.class)) {
-                Log.d(TAG, "GuardianService已经在运行，无需重复启动");
+                LogUtil.d(TAG, "GuardianService已经在运行，无需重复启动");
                 return;
             }
             
@@ -135,9 +135,9 @@ public class KeepAliveWorker extends Worker {
                 // Android 8.0以下使用普通的startService
                 getApplicationContext().startService(guardianIntent);
             }
-            Log.d(TAG, "GuardianService启动成功");
+            LogUtil.d(TAG, "GuardianService启动成功");
         } catch (Exception e) {
-            Log.e(TAG, "GuardianService启动失败: " + e.getMessage());
+            LogUtil.e(TAG, "GuardianService启动失败: " + e.getMessage());
         }
     }
 }

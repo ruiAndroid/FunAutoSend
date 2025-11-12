@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.telephony.SmsManager;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,13 +48,13 @@ public class SmsSendStatusReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null) {
-            Log.e(TAG, "接收到的Intent为null");
+            LogUtil.e(TAG, "接收到的Intent为null");
             return;
         }
         
         String action = intent.getAction();
         if (action == null || !action.equals("SMS_SENT")) {
-            Log.d(TAG, "收到非短信发送状态广播: " + action);
+            LogUtil.d(TAG, "收到非短信发送状态广播: " + action);
             return;
         }
         
@@ -65,11 +65,11 @@ public class SmsSendStatusReceiver extends BroadcastReceiver {
         // 直接从Intent中获取短信ID
         String smsId = getSmsIdFromIntent(intent);
         
-        Log.d(TAG, "收到短信发送状态广播，结果码: " + resultCode + ", 部分索引: " + partIndex + ", 短信ID: " + smsId);
+        LogUtil.d(TAG, "收到短信发送状态广播，结果码: " + resultCode + ", 部分索引: " + partIndex + ", 短信ID: " + smsId);
         
         // 检查是否有短信ID需要处理
         if (smsId == null || smsId.isEmpty()) {
-            Log.d(TAG, "没有待处理的短信ID");
+            LogUtil.d(TAG, "没有待处理的短信ID");
             return;
         }
         
@@ -80,34 +80,34 @@ public class SmsSendStatusReceiver extends BroadcastReceiver {
         switch (resultCode) {
             case Activity.RESULT_OK:
                 // 短信发送成功
-                Log.d(TAG, "短信发送成功，ID: " + smsId + (isTempId ? " (临时ID)" : ""));
+                LogUtil.d(TAG, "短信发送成功，ID: " + smsId + (isTempId ? " (临时ID)" : ""));
                 isSuccessful = true;
                 break;
                 
             case SmsManager.RESULT_NO_DEFAULT_SMS_APP:
                 // 特殊处理RESULT_NO_DEFAULT_SMS_APP(32)，实际是发送成功
-                Log.d(TAG, "短信发送成功(RESULT_NO_DEFAULT_SMS_APP)，ID: " + smsId + (isTempId ? " (临时ID)" : ""));
+                LogUtil.d(TAG, "短信发送成功(RESULT_NO_DEFAULT_SMS_APP)，ID: " + smsId + (isTempId ? " (临时ID)" : ""));
                 isSuccessful = true;
                 break;
                 
             case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                Log.e(TAG, "短信发送失败: 一般错误，ID: " + smsId);
+                LogUtil.e(TAG, "短信发送失败: 一般错误，ID: " + smsId);
                 break;
                 
             case SmsManager.RESULT_ERROR_RADIO_OFF:
-                Log.e(TAG, "短信发送失败: 无线功能关闭，ID: " + smsId);
+                LogUtil.e(TAG, "短信发送失败: 无线功能关闭，ID: " + smsId);
                 break;
                 
             case SmsManager.RESULT_ERROR_NULL_PDU:
-                Log.e(TAG, "短信发送失败: PDU为空，ID: " + smsId);
+                LogUtil.e(TAG, "短信发送失败: PDU为空，ID: " + smsId);
                 break;
                 
             case SmsManager.RESULT_ERROR_NO_SERVICE:
-                Log.e(TAG, "短信发送失败: 无服务，ID: " + smsId);
+                LogUtil.e(TAG, "短信发送失败: 无服务，ID: " + smsId);
                 break;
                 
             default:
-                Log.e(TAG, "短信发送失败: 未知错误码 " + resultCode + ", ID: " + smsId);
+                LogUtil.e(TAG, "短信发送失败: 未知错误码 " + resultCode + ", ID: " + smsId);
                 break;
         }
         
@@ -117,13 +117,13 @@ public class SmsSendStatusReceiver extends BroadcastReceiver {
                 if (isSuccessful) {
                     // 对于多部分短信，只有当收到成功结果时才记录
                     multipartSmsStatus.put(smsId, true);
-                    Log.d(TAG, "多部分短信部分 " + partIndex + " 发送成功，ID: " + smsId);
+                    LogUtil.d(TAG, "多部分短信部分 " + partIndex + " 发送成功，ID: " + smsId);
                 }
                 
                 // 注意：在简化实现中，我们只要有一个部分发送成功就认为整体成功
                 // 实际应用中可能需要更复杂的逻辑来确认所有部分都发送成功
                 if (multipartSmsStatus.containsKey(smsId)) {
-                    Log.d(TAG, "多部分短信至少有一部分发送成功，记录短信ID: " + smsId);
+                    LogUtil.d(TAG, "多部分短信至少有一部分发送成功，记录短信ID: " + smsId);
                     saveForwardedSmsId(context, smsId);
                     // 清理状态
                     multipartSmsStatus.remove(smsId);
@@ -143,9 +143,9 @@ public class SmsSendStatusReceiver extends BroadcastReceiver {
     private void saveForwardedSmsId(Context context, String smsId) {
         try {
             ForwardedSmsManager.getInstance(context).addForwardedSmsId(smsId);
-            Log.d(TAG, "已成功保存短信ID: " + smsId);
+            LogUtil.d(TAG, "已成功保存短信ID: " + smsId);
         } catch (Exception e) {
-            Log.e(TAG, "保存短信ID失败: " + e.getMessage(), e);
+            LogUtil.e(TAG, "保存短信ID失败: " + e.getMessage(), e);
         }
     }
     

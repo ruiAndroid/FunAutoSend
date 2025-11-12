@@ -2,7 +2,7 @@ package com.funshion.funautosend.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import com.funshion.funautosend.model.SmsMessage;
 import com.google.gson.Gson;
@@ -56,9 +56,9 @@ public class SmsStorageHelper {
                 .putString(SMS_LIST_KEY, json)
                 .putLong(LAST_SCAN_TIME_KEY, System.currentTimeMillis())
                 .apply();
-            Log.d(TAG, "成功保存 " + smsList.size() + " 条短信到本地存储");
+            LogUtil.d(TAG, "成功保存 " + smsList.size() + " 条短信到本地存储");
         } catch (Exception e) {
-            Log.e(TAG, "保存短信列表失败: " + e.getMessage());
+            LogUtil.e(TAG, "保存短信列表失败: " + e.getMessage());
         }
     }
     
@@ -72,11 +72,11 @@ public class SmsStorageHelper {
             if (json != null) {
                 Type type = new TypeToken<List<SmsMessage>>(){}.getType();
                 List<SmsMessage> smsList = gson.fromJson(json, type);
-                Log.d(TAG, "从本地存储读取到 " + (smsList != null ? smsList.size() : 0) + " 条短信");
+                LogUtil.d(TAG, "从本地存储读取到 " + (smsList != null ? smsList.size() : 0) + " 条短信");
                 return smsList != null ? smsList : new ArrayList<>();
             }
         } catch (Exception e) {
-            Log.e(TAG, "读取短信列表失败: " + e.getMessage());
+            LogUtil.e(TAG, "读取短信列表失败: " + e.getMessage());
         }
         return new ArrayList<>();
     }
@@ -97,7 +97,7 @@ public class SmsStorageHelper {
             .remove(SMS_LIST_KEY)
             .remove(LAST_SCAN_TIME_KEY)
             .apply();
-        Log.d(TAG, "已清空本地存储的短信列表");
+        LogUtil.d(TAG, "已清空本地存储的短信列表");
     }
     
     /**

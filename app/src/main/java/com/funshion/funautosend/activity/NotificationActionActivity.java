@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import androidx.annotation.Nullable;
 
@@ -25,13 +25,13 @@ public class NotificationActionActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "NotificationActionActivity onCreate");
+        LogUtil.d(TAG, "NotificationActionActivity onCreate");
 
         // 获取意图中的操作类型
         Intent intent = getIntent();
         if (intent != null) {
             String action = intent.getAction();
-            Log.d(TAG, "接收到的操作: " + action);
+            LogUtil.d(TAG, "接收到的操作: " + action);
 
             // 根据操作类型执行相应的操作
             handleNotificationAction(action);
@@ -60,7 +60,7 @@ public class NotificationActionActivity extends Activity {
                 stopForegroundService();
                 break;
             default:
-                Log.d(TAG, "未知的操作类型: " + action);
+                LogUtil.d(TAG, "未知的操作类型: " + action);
                 // 未知操作，默认打开应用
                 openMainApp();
                 break;
@@ -71,7 +71,7 @@ public class NotificationActionActivity extends Activity {
      * 打开应用主界面
      */
     private void openMainApp() {
-        Log.d(TAG, "打开应用主界面");
+        LogUtil.d(TAG, "打开应用主界面");
         Intent mainIntent = new Intent(this, MainActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(mainIntent);
@@ -81,7 +81,7 @@ public class NotificationActionActivity extends Activity {
      * 停止前台服务
      */
     private void stopForegroundService() {
-        Log.d(TAG, "停止前台服务");
+        LogUtil.d(TAG, "停止前台服务");
         Intent serviceIntent = new Intent(this, SmsForwardService.class);
         serviceIntent.setAction(NotificationUtils.ACTION_STOP_SERVICE);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -94,6 +94,6 @@ public class NotificationActionActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "NotificationActionActivity onDestroy");
+        LogUtil.d(TAG, "NotificationActionActivity onDestroy");
     }
 }

@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.Build;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 
 import androidx.annotation.RequiresApi;
 
@@ -48,7 +48,7 @@ public class KeepAliveManager {
      * 启动所有保活机制
      */
     public void startAllKeepAliveMechanisms() {
-        Log.d(TAG, "启动所有保活机制");
+        LogUtil.d(TAG, "启动所有保活机制");
         
         // 注册系统广播接收器
         registerSystemBroadcastReceiver();
@@ -69,7 +69,7 @@ public class KeepAliveManager {
      * 停止所有保活机制
      */
     public void stopAllKeepAliveMechanisms() {
-        Log.d(TAG, "停止所有保活机制");
+        LogUtil.d(TAG, "停止所有保活机制");
         
         // 注销系统广播接收器
         unregisterSystemBroadcastReceiver();
@@ -101,9 +101,9 @@ public class KeepAliveManager {
             
             // 注册广播接收器
             context.registerReceiver(systemBroadcastReceiver, intentFilter);
-            Log.d(TAG, "系统广播接收器注册成功");
+            LogUtil.d(TAG, "系统广播接收器注册成功");
         } catch (Exception e) {
-            Log.e(TAG, "系统广播接收器注册失败: " + e.getMessage());
+            LogUtil.e(TAG, "系统广播接收器注册失败: " + e.getMessage());
         }
     }
 
@@ -114,10 +114,10 @@ public class KeepAliveManager {
         try {
             if (systemBroadcastReceiver != null) {
                 context.unregisterReceiver(systemBroadcastReceiver);
-                Log.d(TAG, "系统广播接收器注销成功");
+                LogUtil.d(TAG, "系统广播接收器注销成功");
             }
         } catch (Exception e) {
-            Log.e(TAG, "系统广播接收器注销失败: " + e.getMessage());
+            LogUtil.e(TAG, "系统广播接收器注销失败: " + e.getMessage());
         }
     }
 
@@ -129,7 +129,7 @@ public class KeepAliveManager {
         try {
             JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
             if (jobScheduler == null) {
-                Log.e(TAG, "JobScheduler服务获取失败");
+                LogUtil.e(TAG, "JobScheduler服务获取失败");
                 return;
             }
             
@@ -165,12 +165,12 @@ public class KeepAliveManager {
             // 提交任务
             int result = jobScheduler.schedule(builder.build());
             if (result == JobScheduler.RESULT_SUCCESS) {
-                Log.d(TAG, "JobScheduler任务调度成功");
+                LogUtil.d(TAG, "JobScheduler任务调度成功");
             } else {
-                Log.e(TAG, "JobScheduler任务调度失败: " + result);
+                LogUtil.e(TAG, "JobScheduler任务调度失败: " + result);
             }
         } catch (Exception e) {
-            Log.e(TAG, "JobScheduler启动失败: " + e.getMessage());
+            LogUtil.e(TAG, "JobScheduler启动失败: " + e.getMessage());
         }
     }
 
@@ -183,10 +183,10 @@ public class KeepAliveManager {
             JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
             if (jobScheduler != null) {
                 jobScheduler.cancel(JOB_ID);
-                Log.d(TAG, "JobScheduler任务取消成功");
+                LogUtil.d(TAG, "JobScheduler任务取消成功");
             }
         } catch (Exception e) {
-            Log.e(TAG, "JobScheduler任务取消失败: " + e.getMessage());
+            LogUtil.e(TAG, "JobScheduler任务取消失败: " + e.getMessage());
         }
     }
     

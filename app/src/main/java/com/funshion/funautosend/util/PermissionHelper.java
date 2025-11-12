@@ -12,7 +12,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
-import android.util.Log;
+import com.funshion.funautosend.util.LogUtil;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
@@ -70,12 +70,12 @@ public class PermissionHelper {
                 boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || 
                                      status == BatteryManager.BATTERY_STATUS_FULL;
                 
-                Log.d(TAG, "电池电量: " + batteryPercentage + "%，充电状态: " + isCharging);
+                LogUtil.d(TAG, "电池电量: " + batteryPercentage + "%，充电状态: " + isCharging);
             }
             
             return batteryPercentage;
         } catch (Exception e) {
-            Log.e(TAG, "获取电池电量失败: " + e.getMessage());
+            LogUtil.e(TAG, "获取电池电量失败: " + e.getMessage());
             e.printStackTrace();
             return -1; // 出错时返回-1
         }

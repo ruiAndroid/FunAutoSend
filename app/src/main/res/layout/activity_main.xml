@@ -9,10 +9,17 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="end"
-        android:padding="20dp"
+        android:orientation="vertical"
         android:background="@android:color/white">
         
+        <!-- 按钮区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:padding="20dp"
+            android:paddingBottom="10dp">
+            
 <!--        <TextView-->
 <!--            android:id="@+id/tv_countdown"-->
 <!--            android:layout_width="wrap_content"-->
@@ -46,6 +53,23 @@
             style="@style/SecondaryButton"
             android:text="删除短信配置"
             android:layout_marginRight="0dp" />
+        </LinearLayout>
+        
+        <!-- 日志开关区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="20dp">
+            
+            <Switch
+                android:id="@+id/switch_save_log"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="记录log"
+                android:textSize="14sp"/>
+        </LinearLayout>
     </LinearLayout>
     
     <!-- 主内容区域 -->
