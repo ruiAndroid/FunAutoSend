@@ -21,8 +21,9 @@ public class LogUtil {
     private static final String TAG = "LogUtil";
     private static final boolean DEFAULT_LOG_ENABLED = true; // 默认启用日志
     private static final boolean DEFAULT_SAVE_TO_FILE_ENABLED = false; // 默认禁用文件保存
-    private static final long MAX_LOG_FILE_SIZE = 5 * 1024 * 1024; // 单日志文件最大5MB
-    private static final int MAX_LOG_FILE_COUNT = 7; // 最多保存7个日志文件
+    private static final long MAX_LOG_FILE_SIZE = 100 * 1024 * 1024; // 单日志文件最大100MB
+    private static final int MAX_LOG_FILE_COUNT = 72; // 最多保存72个日志文件（3天×24小时）
+    private static final int MAX_LOG_DAYS = 3; // 最多保存3天的日志文件
     
     private static boolean isLogEnabled = DEFAULT_LOG_ENABLED;
     private static boolean isSaveToFileEnabled = DEFAULT_SAVE_TO_FILE_ENABLED;
@@ -232,21 +233,39 @@ public class LogUtil {
     }
     
     /**
-     * 清理超过数量限制的旧日志文件
+     * 清理超过时间限制的旧日志文件，只保留最近3天的日志
      */
     private static void cleanupOldLogFiles() {
         try {
             File logDir = new File(logDirPath);
             File[] files = logDir.listFiles((dir, name) -> name.startsWith("app_log_") && name.endsWith(".log"));
             
-            if (files != null && files.length > MAX_LOG_FILE_COUNT) {
-                // 按照修改时间排序，删除最旧的文件
-                java.util.Arrays.sort(files, (f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()));
+            if (files != null && files.length > 0) {
+                // 计算3天前的时间戳
+                long threeDaysAgo = System.currentTimeMillis() - (MAX_LOG_DAYS * 24L * 60L * 60L * 1000L);
                 
-                int filesToDelete = files.length - MAX_LOG_FILE_COUNT;
-                for (int i = 0; i < filesToDelete; i++) {
-                    if (!files[i].delete()) {
-                        Log.e(TAG, "删除旧日志文件失败: " + files[i].getName());
+                // 删除超过3天的日志文件
+                for (File file : files) {
+                    // 检查文件修改时间是否超过3天
+                    if (file.lastModified() < threeDaysAgo) {
+                        if (!file.delete()) {
+                            Log.e(TAG, "删除旧日志文件失败: " + file.getName());
+                        }
+                    }
+                }
+                
+                // 即使在3天内，如果文件数量超过限制，也删除最旧的文件
+                // 重新获取文件列表，因为之前可能已经删除了一些文件
+                files = logDir.listFiles((dir, name) -> name.startsWith("app_log_") && name.endsWith(".log"));
+                if (files != null && files.length > MAX_LOG_FILE_COUNT) {
+                    // 按照修改时间排序，删除最旧的文件
+                    java.util.Arrays.sort(files, (f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()));
+                    
+                    int filesToDelete = files.length - MAX_LOG_FILE_COUNT;
+                    for (int i = 0; i < filesToDelete; i++) {
+                        if (!files[i].delete()) {
+                            Log.e(TAG, "删除旧日志文件失败: " + files[i].getName());
+                        }
                     }
                 }
             }

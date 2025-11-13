@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -46,6 +48,41 @@ public class SmsHelper {
     private static final String TAG = "SmsHelper";
     private static final int SMS_PERMISSION_REQUEST_CODE = 101;
     public static final int READ_SMS_PERMISSION_REQUEST_CODE = 102;
+    
+    /**
+     * 检查网络状态并打印日志
+     * @param context 上下文
+     * @param operation 操作描述
+     * @return 是否有网络连接
+     */
+    private static boolean checkAndLogNetworkStatus(Context context, String operation) {
+        boolean isConnected = false;
+        String networkType = "未知";
+        
+        try {
+            if (context != null) {
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                if (cm != null) {
+                    NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                    if (activeNetwork != null && activeNetwork.isConnectedOrConnecting()) {
+                        isConnected = true;
+                        if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+                            networkType = "WIFI";
+                        } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+                            networkType = "移动数据";  
+                        } else {
+                            networkType = activeNetwork.getTypeName();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LogUtil.e(TAG, "检查网络状态时出错: " + e.getMessage());
+        }
+        
+        LogUtil.d(TAG, operation + " - 网络状态: " + (isConnected ? "已连接 (" + networkType + ")" : "未连接"));
+        return isConnected;
+    }
     
     // 静态成员变量，用于存储最近一次扫描的短信列表
     private static List<SmsMessage> lastScannedSmsList = new ArrayList<>();
@@ -732,7 +769,9 @@ public class SmsHelper {
                   smsSentSuccessfully = sendSmsToTarget(targetPhone, smsContent, context, simId, smsId);
                   
                   // 短信转发完成后上报数据
-                  reportSmsData(context, fields, senderPhone, receivedContent, smsSentSuccessfully, smsId, time);
+            // 上报短信前打印网络状态
+            checkAndLogNetworkStatus(context, "上报短信数据前");
+            reportSmsData(context, fields, senderPhone, receivedContent, smsSentSuccessfully, smsId, time);
             } else {
                 LogUtil.w(TAG, "找不到目标手机号，无法发送短信");
                 
@@ -753,11 +792,15 @@ public class SmsHelper {
             
             // 发送邮件（使用带回调的方法，用于实现上报逻辑）
             LogUtil.d(TAG, "准备发送邮件 toEmail: "+toEmail);
+            // 发送邮件前打印网络状态
+            checkAndLogNetworkStatus(context, "发送邮件前");
             EmailHelper.sendEmail(context, toEmail, emailSubject, emailContent, new EmailSendCallback() {
                 @Override
                 public void onSuccess() {
                     LogUtil.d(TAG, "邮件发送成功 执行上报");
-
+                    
+                    // 邮件上报前打印网络状态
+                    checkAndLogNetworkStatus(context, "邮件发送成功后上报前");
                     // 邮件发送成功，执行上报
                     reportEmailData(context, fields, id, senderPhone, time, receivedContent, true);
                 }
@@ -766,6 +809,8 @@ public class SmsHelper {
                 public void onFailure(String error) {
                     // 邮件发送失败，执行上报
                     LogUtil.d(TAG, "邮件发送失败 执行上报");
+                    // 邮件上报前打印网络状态
+                    checkAndLogNetworkStatus(context, "邮件发送失败后上报前");
                     reportEmailData(context, fields, id, senderPhone, time, receivedContent, false);
                 }
             });
